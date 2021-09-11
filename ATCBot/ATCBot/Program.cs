@@ -11,12 +11,12 @@ namespace ATCBot
 {
     partial class Program
     {
-        internal DiscordSocketClient client;
+        public DiscordSocketClient client;
 
-        internal static Config config = new Config();
+        public static Config config = new Config();
         private static bool shouldSaveConfig = true;
 
-        internal bool shouldUpdate = false;
+        public  bool shouldUpdate = false;
 
         static void Main(string[] args)
         {

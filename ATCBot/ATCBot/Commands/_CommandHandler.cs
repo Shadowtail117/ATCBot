@@ -49,7 +49,7 @@ namespace ATCBot
         }
         internal string Version()
         {
-            return Config.version;
+            return "Current version is: " + Config.version;
         }
     }
 }
