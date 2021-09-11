@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="2.4.0" />
+    <PackageReference Include="Discord.Net.Labs" Version="3.0.2" />
     <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
   </ItemGroup>
 
