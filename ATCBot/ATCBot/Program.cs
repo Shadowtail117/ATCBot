@@ -118,10 +118,15 @@ namespace ATCBot
             LastVTOLLobbies.Clear();
             Lobby[] lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
             
-            foreach (Lobby lobby in lobbies)
+            // If Lobbies are null that means there are 0 lobbies.
+            if (lobbies != null)
             {
-                LastVTOLLobbies.Add(new VTOLLobby(lobby));
+                foreach (Lobby lobby in lobbies)
+                {
+                    LastVTOLLobbies.Add(new VTOLLobby(lobby));
+                } 
             }
+            
 
             await ShutdownSteam();
             
@@ -129,9 +134,12 @@ namespace ATCBot
             LastJetborneLobbies.Clear();
             lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
             
-            foreach (Lobby lobby in lobbies)
+            if (lobbies != null)
             {
-                LastJetborneLobbies.Add(new JetborneLobby(lobby));
+                foreach (Lobby lobby in lobbies)
+                {
+                    LastJetborneLobbies.Add(new JetborneLobby(lobby));
+                }
             }
 
             await ShutdownSteam();
