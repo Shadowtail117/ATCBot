@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
-
+using ATCBot.Structs;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
@@ -15,8 +17,8 @@ namespace ATCBot
 {
     partial class Program
     {
-        public static Lobby[] LastVTOLLobbies;
-        public static Lobby[] LastJetborneLobbies;
+        public static List<VTOLLobby> LastVTOLLobbies = new ();
+        public static List<JetborneLobby> LastJetborneLobbies = new ();
         
         private const int _vtolID = 667970;
         private const int _jetborneID = 1397650;
@@ -57,7 +59,7 @@ namespace ATCBot
             client.Log += Log;
             client.Ready += ClientReady;
             client.InteractionCreated += ClientInteractionCreated;
-            //client.MessageReceived += MessageReceived;
+            client.MessageReceived += MessageReceived;
 
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
@@ -66,6 +68,34 @@ namespace ATCBot
             await QueryTimer();
             
             await Task.Delay(-1);
+        }
+
+        private async Task MessageReceived(SocketMessage message)
+        {
+            if (!message.Content.Equals("!test"))
+                return;
+            
+            StringBuilder builder = new StringBuilder();
+            builder.AppendLine($"VTOL VR Lobbies | Count = {LastVTOLLobbies.Count}");
+            foreach (VTOLLobby lobby in LastVTOLLobbies)
+            {
+                builder.AppendLine($"{lobby.LobbyName} | " +
+                                   $"{lobby.OwnerName} | " +
+                                   $"{lobby.ScenarioText} | " +
+                                   $"Players = {lobby.MemberCount}");
+                
+            }
+
+            builder.AppendLine();
+            builder.AppendLine($"Jetborne Racing Lobbies | Count = {LastJetborneLobbies.Count}");
+            foreach (JetborneLobby lobby in LastJetborneLobbies)
+            {
+                builder.AppendLine($"{lobby.LobbyName} | " +
+                                   $"{lobby.OwnerName} | " +
+                                   $"{lobby.MemberCount} | " +
+                                   $"{lobby.CurrentLap}/{lobby.RaceLaps}");
+            }
+            await message.Channel.SendMessageAsync(builder.ToString());
         }
 
         public async Task ClientReady()
@@ -83,21 +113,37 @@ namespace ATCBot
         private async Task GetData()
         {
             await Log($"Getting Lobbies at {DateTime.Now}");
-            LastVTOLLobbies = await GetLobbies(_vtolID);
-            LastJetborneLobbies = await GetLobbies(_vtolID);
+
+            SteamClient.Init(_vtolID);
+            LastVTOLLobbies.Clear();
+            Lobby[] lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
             
-            // These variables could be null if there is 0 lobbies.
+            foreach (Lobby lobby in lobbies)
+            {
+                LastVTOLLobbies.Add(new VTOLLobby(lobby));
+            }
+
+            await ShutdownSteam();
+            
+            SteamClient.Init(_jetborneID);
+            LastJetborneLobbies.Clear();
+            lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
+            
+            foreach (Lobby lobby in lobbies)
+            {
+                LastJetborneLobbies.Add(new JetborneLobby(lobby));
+            }
+
+            await ShutdownSteam();
         }
 
-        
-        private async Task<Lobby[]> GetLobbies(uint appID)
+        private async Task ShutdownSteam()
         {
-            SteamClient.Init(appID);
-            Lobby[] lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
+            // These delays are needed because an error happens if 
+            // init and shutdown are ran at the same time
             await Task.Delay(TimeSpan.FromSeconds(1));
             SteamClient.Shutdown();
             await Task.Delay(TimeSpan.FromSeconds(1));
-            return lobbies;
         }
 
         static async Task Log(string message)
