@@ -1,0 +1,31 @@
+name: .NET
+
+on:
+  push:
+    branches: [ releases ]
+  pull_request:
+    branches: [ releases ]
+
+jobs:
+  publish-artifacts:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Create artifact folder
+      run: mkdir downloads
+    - name: Add artifacts
+      run: dotnet publish --output downloads -p:PublishSingleFile=true --runtime win-x64
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2.2.2
+      with:
+        name: Downloads
+        path: downloads
