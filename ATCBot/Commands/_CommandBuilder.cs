@@ -10,12 +10,19 @@ using Discord.WebSocket;
 
 namespace ATCBot.Commands
 {
+    /// <summary>
+    /// Class for building all slash commands.
+    /// </summary>
     public class CommandBuilder
     {
-        public DiscordSocketClient client;
+        private DiscordSocketClient client;
 
-        public Config config = Program.config;
+        private Config config = Program.config;
 
+        /// <summary>
+        /// Fetches all commands using Reflection, builds them, and overwrites any previous commands with the new ones.
+        /// </summary>
+        /// <remarks>Called when the bot deems itself ready for work.</remarks>
         public async Task BuildCommands()
         {
             //Get all commands (all classes that inherit from Command)
@@ -53,6 +60,10 @@ namespace ATCBot.Commands
             config.shouldBuildCommands = false;
         }
 
+        /// <summary>
+        /// Default constructor. Assign the current bot client.
+        /// </summary>
+        /// <param name="client">The current client to write the new commands to.</param>
         public CommandBuilder(DiscordSocketClient client)
         {
             this.client = client;
