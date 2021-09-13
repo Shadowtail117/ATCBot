@@ -29,12 +29,6 @@ namespace ATCBot
         public bool shouldBuildCommands = true;
 
         /// <summary>
-        /// The current prefix that the bot uses.
-        /// </summary>
-        [JsonRequired]
-        public string prefix = @"ATC";
-
-        /// <summary>
         /// The time in seconds to wait between server updates.
         /// </summary>
         public int delay = 5;
