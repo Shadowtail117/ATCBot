@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31025.194
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ATCBot", "ATCBot\ATCBot.csproj", "{B54BC9C9-B189-4028-B355-99892FB154EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ATCBot", "ATCBot\ATCBot.csproj", "{B54BC9C9-B189-4028-B355-99892FB154EF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
