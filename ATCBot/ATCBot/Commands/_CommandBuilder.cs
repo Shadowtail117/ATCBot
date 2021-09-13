@@ -1,66 +1,59 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Linq;
+using System;
 
 using Discord;
 using Discord.Net;
+using Discord.WebSocket;
 
-namespace ATCBot
+namespace ATCBot.Commands
 {
-    partial class Program
+    public class CommandBuilder
     {
+        public DiscordSocketClient client;
+        public Config config = Program.config;
+
         public async Task BuildCommands()
         {
-            if(config.shouldBuildCommands)
+            //Get all commands (all classes that inherit from Command)
+            var commands = Assembly.GetAssembly(typeof(Command)).GetTypes().Where(t => t.IsSubclassOf(typeof(Command)));
+            foreach(var c in commands)
             {
-                await Log(new LogMessage(LogSeverity.Debug, "Slash Command Builder", "Building slash commands..."));
+                var command = (Command)Activator.CreateInstance(c);
+                
+                Command.AllCommands.Add(command);
+            }
+
+            if (config.shouldBuildCommands)
+            {
+                await Program.Log(new LogMessage(LogSeverity.Debug, "Slash Command Builder", "Building slash commands..."));
                 config.shouldBuildCommands = false;
             }
             else
             {
-                await Log(new LogMessage(LogSeverity.Debug, "Slash Command Builder", "Skipping building slash commands..."));
+                await Program.Log(new LogMessage(LogSeverity.Debug, "Slash Command Builder", "Skipping building slash commands..."));
                 return;
             }
 
-            var commands = new List<SlashCommandBuilder>();
-
-            StartProcessing();
-            StopProcessing();
-            Version();
-
             try
             {
-                foreach(var command in commands)
-                    await client.CreateGlobalApplicationCommandAsync(command.Build());
+                foreach (var c in Command.AllCommands)
+                    await client.CreateGlobalApplicationCommandAsync(c.Builder.Build());
             }
             catch (ApplicationCommandException e)
             {
-                await Log(new LogMessage(LogSeverity.Critical, "Slash Command Builder", "Could not initialize a slash command!", e));
+                await Program.Log(new LogMessage(LogSeverity.Critical, "Slash Command Builder", "Could not initialize a slash command!", e));
                 throw;
             }
+            SlashCommandBuilder test = new SlashCommandBuilder().WithName("test").WithDescription("This is a test command");
+            config.shouldBuildCommands = false;
+        }
 
-            void StartProcessing()
-            {
-                var startCommand = new SlashCommandBuilder();
-                startCommand.WithName("start");
-                startCommand.WithDescription("Start updating the status channel. Admins only.");
-                commands.Add(startCommand);
-            }
-
-            void StopProcessing()
-            {
-                var stopCommand = new SlashCommandBuilder();
-                stopCommand.WithName("stop");
-                stopCommand.WithDescription("Stop updating the status channel. Admins only.");
-                commands.Add(stopCommand);
-            }
-
-            void Version()
-            {
-                var versionCommand = new SlashCommandBuilder();
-                versionCommand.WithName("version");
-                versionCommand.WithDescription("Get the version of the bot!");
-                commands.Add(versionCommand);
-            }
+        public CommandBuilder(DiscordSocketClient client)
+        {
+            this.client = client;
         }
     }
 }
