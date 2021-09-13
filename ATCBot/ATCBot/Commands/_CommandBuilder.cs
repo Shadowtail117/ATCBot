@@ -39,15 +39,16 @@ namespace ATCBot.Commands
 
             try
             {
+                var commandList = new List<SlashCommandProperties>();
                 foreach (var c in Command.AllCommands)
-                    await client.CreateGlobalApplicationCommandAsync(c.Builder.Build());
+                    commandList.Add(c.Builder.Build());
+                await client.BulkOverwriteGlobalApplicationCommandsAsync(commandList.ToArray());
             }
             catch (ApplicationCommandException e)
             {
                 await Program.Log(new LogMessage(LogSeverity.Critical, "Slash Command Builder", "Could not initialize a slash command!", e));
                 throw;
             }
-            SlashCommandBuilder test = new SlashCommandBuilder().WithName("test").WithDescription("This is a test command");
             config.shouldBuildCommands = false;
         }
 

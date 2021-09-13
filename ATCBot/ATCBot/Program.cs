@@ -20,7 +20,7 @@ namespace ATCBot
 
         public CommandHandler commandHandler;
 
-        private static bool shouldSaveConfig = true;
+        private static bool forceDontSaveConfig = true;
 
         public static Config config = Config.config;
 
@@ -37,7 +37,7 @@ namespace ATCBot
 
             if (!config.Load(out config))
             {
-                shouldSaveConfig = false;
+                forceDontSaveConfig = true;
                 Console.WriteLine("Couldn't load config. Aborting. Press any key to exit.");
                 Console.ReadKey();
                 return;
@@ -91,9 +91,22 @@ namespace ATCBot
 
         private static void OnExit(object sender, EventArgs e)
         {
-            if (!shouldSaveConfig) return;
-            Console.WriteLine("\nShutting down!");
-            config.Save();
+            if (forceDontSaveConfig) return;
+            Console.WriteLine("----------");
+            Console.WriteLine("Would you like to save the current configuration to disk? (y/n)");
+            if(char.ToLower(Console.ReadKey().KeyChar) == 'y')
+            {
+                Console.WriteLine("Saving! Press any key to exit.");
+                config.Save();
+                Console.ReadLine();
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Not saving! Press any key to exit.");
+                Console.ReadLine();
+                return;
+            }
         }
     }
 }
