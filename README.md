@@ -13,15 +13,15 @@ Most variables of the bot are changeable using slash commands. See below.
 
 ATCBot currently features the following commands:
 
-| Command         | Parameters | Description                                    | Permissions Required |
-| -------         | ---------- | -----------                                    | -------------------- |
-| `version`       | None       | Gets the version of the bot, as updated by me. | *None*               |
-| `startupdating` | None       | Starts updating the lobby information.         | Manage Server        |
-| `stopupdating`  | None       | Stops updating the lobby information           | Manage Server        |
+| Command         | Parameters                                                   | Description                                    | Permissions Required |
+| -------         | ----------                                                   | -----------                                    | -------------------- |
+| `version`       | None                                                         | Gets the version of the bot, as updated by me. | None                 |
+| `startupdating` | None                                                         | Starts updating the lobby information.         | Manage Server        |
+| `stopupdating`  | None                                                         | Stops updating the lobby information           | Manage Server        |
+| `getconfig`     | `config`: The config item to get.                            | Gets the value of a config item.               | Manage Server        |
+| `setconfig`     | `config`: The config item to set. `value`: The value to set. | Sets the value of a config item.               | Manage Server        |
 
 #### Planned Commands
-
-- Config get/set
 - Change channel to update lobby info in for either game
 
 ## Hosting
