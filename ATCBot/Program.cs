@@ -45,6 +45,7 @@ namespace ATCBot
             Console.WriteLine($"Booting up ATCBot version {Config.version}.");
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnExit);
 
+            Steam.SetupSteam();
             config = new Config();
 
             if (!config.Load(out config))
