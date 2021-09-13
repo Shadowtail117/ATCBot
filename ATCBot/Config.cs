@@ -14,7 +14,7 @@ namespace ATCBot
         /// <summary>
         /// The current version of the bot.
         /// </summary>
-        public static readonly string version = "0.1.0";
+        public static readonly string version = "0.2.0";
 
         /// <summary>
         /// The bot's token. Loaded externally from <see cref="saveFile"/>.
@@ -27,12 +27,6 @@ namespace ATCBot
         /// </summary>
         /// <remarks>Will automatically set itself to false after building, edit the config directly to re-enable.</remarks>
         public bool shouldBuildCommands = true;
-
-        /// <summary>
-        /// The current prefix that the bot uses.
-        /// </summary>
-        [JsonRequired]
-        public string prefix = @"ATC";
 
         /// <summary>
         /// The time in seconds to wait between server updates.
