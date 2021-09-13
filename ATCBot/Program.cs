@@ -1,28 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ATCBot.Commands;
 using ATCBot.Structs;
+
 using Discord;
-using Discord.Net;
 using Discord.WebSocket;
 
-using Newtonsoft.Json;
 using Steamworks;
 using Steamworks.Data;
 
-using ATCBot.Commands;
+using System;
 using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ATCBot
 {
     partial class Program
     {
-        public static List<VTOLLobby> LastVTOLLobbies = new ();
-        public static List<JetborneLobby> LastJetborneLobbies = new ();
-        
+        public static List<VTOLLobby> LastVTOLLobbies = new();
+        public static List<JetborneLobby> LastJetborneLobbies = new();
+
         private const int _vtolID = 667970;
         private const int _jetborneID = 1397650;
 
@@ -34,15 +30,14 @@ namespace ATCBot
 
         private static bool forceDontSaveConfig = true;
 
-        public  bool shouldUpdate = false;
-        
+        public bool shouldUpdate = false;
+
         /// <summary>
         /// How often to check the lobbies
         /// </summary>
-        private TimeSpan _queryDelay = TimeSpan.FromMinutes(0.5f);
-        public static Config config = Config.config;
+        private TimeSpan _queryDelay = TimeSpan.FromSeconds(config.delay);
 
-        public static bool shouldUpdate = false;
+        public static Config config = Config.config;
 
         static void Main(string[] args)
         {
@@ -65,11 +60,10 @@ namespace ATCBot
         }
 
         public async Task MainAsync()
-        { 
+        {
             client = new DiscordSocketClient();
             client.Log += Log;
             client.Ready += ClientReady;
-            client.InteractionCreated += ClientInteractionCreated;
             client.MessageReceived += MessageReceived;
 
             await client.LoginAsync(TokenType.Bot, config.token);
@@ -77,7 +71,7 @@ namespace ATCBot
             await client.SetGameAsync(config.prefix + "commands");
 
             await QueryTimer();
-            
+
             await Task.Delay(-1);
         }
 
@@ -85,7 +79,7 @@ namespace ATCBot
         {
             if (!message.Content.Equals("!test"))
                 return;
-            
+
             StringBuilder builder = new StringBuilder();
             builder.AppendLine($"VTOL VR Lobbies | Count = {LastVTOLLobbies.Count}");
             foreach (VTOLLobby lobby in LastVTOLLobbies)
@@ -94,7 +88,7 @@ namespace ATCBot
                                    $"{lobby.OwnerName} | " +
                                    $"{lobby.ScenarioText} | " +
                                    $"Players = {lobby.MemberCount}");
-                
+
             }
 
             builder.AppendLine();
@@ -131,23 +125,23 @@ namespace ATCBot
             SteamClient.Init(_vtolID);
             LastVTOLLobbies.Clear();
             Lobby[] lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
-            
+
             // If Lobbies are null that means there are 0 lobbies.
             if (lobbies != null)
             {
                 foreach (Lobby lobby in lobbies)
                 {
                     LastVTOLLobbies.Add(new VTOLLobby(lobby));
-                } 
+                }
             }
-            
+
 
             await ShutdownSteam();
-            
+
             SteamClient.Init(_jetborneID);
             LastJetborneLobbies.Clear();
             lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
-            
+
             if (lobbies != null)
             {
                 foreach (Lobby lobby in lobbies)
@@ -198,7 +192,7 @@ namespace ATCBot
             if (forceDontSaveConfig) return;
             Console.WriteLine("----------");
             Console.WriteLine("Would you like to save the current configuration to disk? (y/n)");
-            if(char.ToLower(Console.ReadKey().KeyChar) == 'y')
+            if (char.ToLower(Console.ReadKey().KeyChar) == 'y')
             {
                 Console.WriteLine("Saving! Press any key to exit.");
                 config.Save();
