@@ -9,6 +9,10 @@ ATCBot will publish lobby information using a singular message, preferably withi
 
 Most variables of the bot are changeable using slash commands. See below.
 
+### Steamworks
+
+ATCBot uses Steamworks to fetch lobby information. Steamworks requires a logged in Steam account to be present on the machine hosting it. If there isn't, ATCBot will not work properly!
+
 ## Commands
 
 ATCBot currently features the following commands:

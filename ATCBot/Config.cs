@@ -18,7 +18,7 @@ namespace ATCBot
         /// <summary>
         /// The current version of the bot.
         /// </summary>
-        public static readonly string version = "0.2.0";
+        public static readonly string version = "1.0.0";
 
         /// <summary>
         /// The bot's token. Loaded externally from <see cref="saveFile"/>.
