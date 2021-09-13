@@ -7,16 +7,24 @@ using Discord.WebSocket;
 
 using Newtonsoft.Json;
 
+using ATCBot.Commands;
+using System.Collections.Generic;
+
 namespace ATCBot
 {
     partial class Program
     {
         public DiscordSocketClient client;
 
-        public static Config config = new Config();
-        private static bool shouldSaveConfig = true;
+        public CommandBuilder commandBuilder;
 
-        public  bool shouldUpdate = false;
+        public CommandHandler commandHandler;
+
+        private static bool forceDontSaveConfig = true;
+
+        public static Config config = Config.config;
+
+        public static bool shouldUpdate = false;
 
         static void Main(string[] args)
         {
@@ -25,9 +33,11 @@ namespace ATCBot
             Console.WriteLine($"Booting up ATCBot version {Config.version}.");
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnExit);
 
+            config = new Config();
+
             if (!config.Load(out config))
             {
-                shouldSaveConfig = false;
+                forceDontSaveConfig = true;
                 Console.WriteLine("Couldn't load config. Aborting. Press any key to exit.");
                 Console.ReadKey();
                 return;
@@ -37,11 +47,10 @@ namespace ATCBot
         }
 
         public async Task MainAsync()
-        {
+        { 
             client = new DiscordSocketClient();
             client.Log += Log;
             client.Ready += ClientReady;
-            client.InteractionCreated += ClientInteractionCreated;
             //client.MessageReceived += MessageReceived;
 
             await client.LoginAsync(TokenType.Bot, config.token);
@@ -53,14 +62,17 @@ namespace ATCBot
 
         public async Task ClientReady()
         {
-            await BuildCommands();
+            commandHandler = new();
+            commandBuilder = new(client);
+            client.InteractionCreated += commandHandler.ClientInteractionCreated;
+            await commandBuilder.BuildCommands();
         }
 
         /// <summary>
         /// Logs a message. Use this over <see cref="Console.WriteLine()"/> when possible.
         /// </summary>
         /// <param name="message">The message to be logged.</param>
-        internal static Task Log(LogMessage message)
+        public static Task Log(LogMessage message)
         {
             Console.ForegroundColor = message.Severity switch
             {
@@ -79,9 +91,22 @@ namespace ATCBot
 
         private static void OnExit(object sender, EventArgs e)
         {
-            if (!shouldSaveConfig) return;
-            Console.WriteLine("\nShutting down!");
-            config.Save();
+            if (forceDontSaveConfig) return;
+            Console.WriteLine("----------");
+            Console.WriteLine("Would you like to save the current configuration to disk? (y/n)");
+            if(char.ToLower(Console.ReadKey().KeyChar) == 'y')
+            {
+                Console.WriteLine("Saving! Press any key to exit.");
+                config.Save();
+                Console.ReadLine();
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Not saving! Press any key to exit.");
+                Console.ReadLine();
+                return;
+            }
         }
     }
 }

@@ -10,10 +10,11 @@ namespace ATCBot
     /// </summary>
     public class Config
     {
+        public static Config config;
         /// <summary>
         /// The current version of the bot.
         /// </summary>
-        public static readonly string version = "0.0.2";
+        public static readonly string version = "0.1.0";
 
         /// <summary>
         /// The bot's token. Loaded externally from <see cref="saveFile"/>.
@@ -28,8 +29,9 @@ namespace ATCBot
         public bool shouldBuildCommands = true;
 
         /// <summary>
-        /// The current prefix that the bot uses. Defaults to #.
+        /// The current prefix that the bot uses.
         /// </summary>
+        [JsonRequired]
         public string prefix = @"ATC";
 
         /// <summary>
