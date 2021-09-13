@@ -12,7 +12,7 @@ namespace ATCBot
 {
     class LobbyHandler
     {
-        public static TimeSpan delay = TimeSpan.FromSeconds(Config.config.delay);
+        public TimeSpan delay = TimeSpan.FromSeconds(Program.config.delay);
 
         public List<VTOLLobby> vtolLobbies = new();
         public List<JetborneLobby> jetborneLobbies = new();
@@ -21,8 +21,8 @@ namespace ATCBot
         {
             if(Program.shouldUpdate)
             {
-                await GetData();
                 await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Verbose, "Lobby Handler", "Updating..."));
+                await GetData();
             }
             else await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Verbose, "Lobby Handler", "Skipping Update..."));
             await Task.Delay(delay);

@@ -33,6 +33,8 @@ namespace ATCBot
 
         public static Config config = Config.config;
 
+
+
         static void Main(string[] args)
         {
             //Stuff to set up the console
@@ -70,42 +72,6 @@ namespace ATCBot
             await Task.Delay(-1);
         }
 
-        private async Task MessageReceived(SocketMessage message)
-        {
-            if (!message.Content.Equals("!test"))
-                return;
-
-            StringBuilder builder = new StringBuilder();
-            builder.AppendLine($"VTOL VR Lobbies | Count = {lobbyHandler.vtolLobbies.Count}");
-            foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
-            {
-                builder.AppendLine($"{lobby.LobbyName} | " +
-                                   $"{lobby.OwnerName} | " +
-                                   $"{lobby.ScenarioText} | " +
-                                   $"Players = {lobby.MemberCount}");
-
-            }
-
-            builder.AppendLine();
-            builder.AppendLine($"Jetborne Racing Lobbies | Count = {lobbyHandler.jetborneLobbies.Count}");
-            foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
-            {
-                builder.AppendLine($"{lobby.LobbyName} | " +
-                                   $"{lobby.OwnerName} | " +
-                                   $"{lobby.MemberCount} | " +
-                                   $"{lobby.CurrentLap}/{lobby.RaceLaps}");
-            }
-            await message.Channel.SendMessageAsync(builder.ToString());
-        }
-
-        public async Task ClientReady()
-        {
-            commandHandler = new();
-            commandBuilder = new(client);
-            client.InteractionCreated += commandHandler.ClientInteractionCreated;
-            await commandBuilder.BuildCommands();
-        }
-
         public static async Task Log(string message)
         {
             await Log(new LogMessage(LogSeverity.Info, string.Empty, message));
@@ -131,6 +97,65 @@ namespace ATCBot
             return Task.CompletedTask;
         }
 
+        public async Task UpdateLobbyInformation(ISocketMessageChannel c)
+        {
+            //VTOL lobbies
+            EmbedBuilder vtolEmbedBuilder = new();
+            vtolEmbedBuilder.WithColor(Discord.Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
+            if (lobbyHandler.vtolLobbies.Count > 0)
+            {
+                foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
+                {
+                    if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioText == string.Empty)
+                    {
+                        await Log(new LogMessage(LogSeverity.Warning, "VTOL Embed Builder", "Invalid lobby state!"));
+                        continue;
+                    }
+                    string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players";
+                    vtolEmbedBuilder.AddField(lobby.LobbyName, content);
+                }
+            }
+            else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
+            await c.SendMessageAsync(embed: vtolEmbedBuilder.Build());
+
+            //JBR lobbies
+            EmbedBuilder jetborneEmbedBuilder = new();
+            jetborneEmbedBuilder.WithColor(Discord.Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
+            if (lobbyHandler.jetborneLobbies.Count > 0)
+            {
+                foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
+                {
+                    if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
+                    {
+                        await Log(new LogMessage(LogSeverity.Warning, "JBR Embed Builder", "Invalid lobby state!"));
+                        continue;
+                    }
+                    string content = $"{lobby.MemberCount} Players\nLap {lobby.CurrentLap}/{lobby.RaceLaps}";
+                    jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
+                }
+            }
+            else jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
+            await c.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
+        }
+
+        //Event methods vvv
+
+        //TODO: remove, this is a debug method
+        private async Task MessageReceived(SocketMessage message)
+        {
+            if (!message.Content.Equals("!test"))
+                return;
+            await UpdateLobbyInformation(message.Channel);
+        }
+
+        public async Task ClientReady()
+        {
+            commandHandler = new();
+            commandBuilder = new(client);
+            client.InteractionCreated += commandHandler.ClientInteractionCreated;
+            await commandBuilder.BuildCommands();
+        }
+        
         private static void OnExit(object sender, EventArgs e)
         {
             if (forceDontSaveConfig) return;
