@@ -64,7 +64,6 @@ namespace ATCBot
 
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
-            await client.SetGameAsync(config.prefix + "commands");
 
             lobbyHandler = new();
             await lobbyHandler.QueryTimer();
