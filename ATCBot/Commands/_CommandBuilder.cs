@@ -13,6 +13,7 @@ namespace ATCBot.Commands
     public class CommandBuilder
     {
         public DiscordSocketClient client;
+
         public Config config = Program.config;
 
         public async Task BuildCommands()
