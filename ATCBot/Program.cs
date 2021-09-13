@@ -16,11 +16,8 @@ namespace ATCBot
 {
     partial class Program
     {
-        public static List<VTOLLobby> LastVTOLLobbies = new();
-        public static List<JetborneLobby> LastJetborneLobbies = new();
-
-        private const int _vtolID = 667970;
-        private const int _jetborneID = 1397650;
+        public const int vtolID = 667970;
+        public const int jetborneID = 1397650;
 
         public DiscordSocketClient client;
 
@@ -28,14 +25,11 @@ namespace ATCBot
 
         public CommandHandler commandHandler;
 
+        public LobbyHandler lobbyHandler;
+
         private static bool forceDontSaveConfig = true;
 
-        public bool shouldUpdate = false;
-
-        /// <summary>
-        /// How often to check the lobbies
-        /// </summary>
-        private TimeSpan _queryDelay = TimeSpan.FromSeconds(config.delay);
+        public static bool shouldUpdate = false;
 
         public static Config config = Config.config;
 
@@ -70,7 +64,8 @@ namespace ATCBot
             await client.StartAsync();
             await client.SetGameAsync(config.prefix + "commands");
 
-            await QueryTimer();
+            lobbyHandler = new();
+            await lobbyHandler.QueryTimer();
 
             await Task.Delay(-1);
         }
@@ -81,8 +76,8 @@ namespace ATCBot
                 return;
 
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine($"VTOL VR Lobbies | Count = {LastVTOLLobbies.Count}");
-            foreach (VTOLLobby lobby in LastVTOLLobbies)
+            builder.AppendLine($"VTOL VR Lobbies | Count = {lobbyHandler.vtolLobbies.Count}");
+            foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
             {
                 builder.AppendLine($"{lobby.LobbyName} | " +
                                    $"{lobby.OwnerName} | " +
@@ -92,8 +87,8 @@ namespace ATCBot
             }
 
             builder.AppendLine();
-            builder.AppendLine($"Jetborne Racing Lobbies | Count = {LastJetborneLobbies.Count}");
-            foreach (JetborneLobby lobby in LastJetborneLobbies)
+            builder.AppendLine($"Jetborne Racing Lobbies | Count = {lobbyHandler.jetborneLobbies.Count}");
+            foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
             {
                 builder.AppendLine($"{lobby.LobbyName} | " +
                                    $"{lobby.OwnerName} | " +
@@ -111,58 +106,7 @@ namespace ATCBot
             await commandBuilder.BuildCommands();
         }
 
-        private async Task QueryTimer()
-        {
-            await GetData();
-            await Task.Delay(_queryDelay);
-            await QueryTimer();
-        }
-
-        private async Task GetData()
-        {
-            await Log($"Getting Lobbies at {DateTime.Now}");
-
-            SteamClient.Init(_vtolID);
-            LastVTOLLobbies.Clear();
-            Lobby[] lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
-
-            // If Lobbies are null that means there are 0 lobbies.
-            if (lobbies != null)
-            {
-                foreach (Lobby lobby in lobbies)
-                {
-                    LastVTOLLobbies.Add(new VTOLLobby(lobby));
-                }
-            }
-
-
-            await ShutdownSteam();
-
-            SteamClient.Init(_jetborneID);
-            LastJetborneLobbies.Clear();
-            lobbies = await SteamMatchmaking.LobbyList.RequestAsync();
-
-            if (lobbies != null)
-            {
-                foreach (Lobby lobby in lobbies)
-                {
-                    LastJetborneLobbies.Add(new JetborneLobby(lobby));
-                }
-            }
-
-            await ShutdownSteam();
-        }
-
-        private async Task ShutdownSteam()
-        {
-            // These delays are needed because an error happens if 
-            // init and shutdown are ran at the same time
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            SteamClient.Shutdown();
-            await Task.Delay(TimeSpan.FromSeconds(1));
-        }
-
-        static async Task Log(string message)
+        public static async Task Log(string message)
         {
             await Log(new LogMessage(LogSeverity.Info, string.Empty, message));
         }
