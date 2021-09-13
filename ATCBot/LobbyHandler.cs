@@ -17,12 +17,15 @@ namespace ATCBot
         public List<VTOLLobby> vtolLobbies = new();
         public List<JetborneLobby> jetborneLobbies = new();
 
+        public Program program;
+
         public async Task QueryTimer()
         {
             if(Program.shouldUpdate)
             {
                 await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Verbose, "Lobby Handler", "Updating..."));
                 await GetData();
+                await program.UpdateLobbyInformation();
             }
             else await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Verbose, "Lobby Handler", "Skipping Update..."));
             await Task.Delay(delay);
@@ -60,6 +63,8 @@ namespace ATCBot
                 }
             }
             await ShutdownSteam();
+
+            
         }
 
         private async Task ShutdownSteam()
@@ -69,6 +74,11 @@ namespace ATCBot
             await Task.Delay(TimeSpan.FromSeconds(1));
             SteamClient.Shutdown();
             await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+
+        public LobbyHandler(Program program)
+        {
+            this.program = program;
         }
     }
 }

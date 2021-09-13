@@ -1,11 +1,11 @@
-# ATCBot v0.1.0
+# ATCBot v0.3.0
 [![.NET](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
 
 ## Design
 
-ATCBot will publish lobby information using a singular message, preferably within its own channel(s) on the server. It will fetch lobby information continuously except when told to stop, and will wait a variable amount of time per seconds based on the configuration that it is running.
+ATCBot will publish lobby information using a singular message, preferably within its own channel(s) on the server. It will fetch lobby information continuously except when told to stop, and will wait a variable amount of time per second based on the configuration that it is running.
 
 Most variables of the bot are changeable using slash commands. See below.
 
@@ -20,9 +20,24 @@ ATCBot currently features the following commands:
 | `stopupdating`  | None                                                         | Stops updating the lobby information           | Manage Server        |
 | `getconfig`     | `config`: The config item to get.                            | Gets the value of a config item.               | Manage Server        |
 | `setconfig`     | `config`: The config item to set. `value`: The value to set. | Sets the value of a config item.               | Manage Server        |
+| `shutdown`      | None                                                         | Shuts down the bot. Requires a manual restart. | Manage Server        |
 
-#### Planned Commands
-- Change channel to update lobby info in for either game
+#### getconfig
+Valid arguments for `getconfig`:
+- `delay` - The delay **in seconds** between updates to the lobby messages, on top of network processing times.
+- `updating` - Whether or not the bot is currently updating the lobby messages.
+- `vtolchannelid` - The channel ID set for the bot to post VTOL VR lobby information.
+- `jetbornechannelid` - The channel ID set for the bot to post Jetborne Racing lobby information.
+
+### setconfig
+Valid arguments for `setconfig`'s first parameter:
+- `delay` - The delay **in seconds** between updates to the lobby messages, on top of network processing times.
+- `vtolchannelid` - The channel ID set for the bot to post VTOL VR lobby information.
+- `jetbornechannelid` - The channel ID set for the bot to post Jetborne Racing lobby information.
+- `resetcommands` - Whether or not to rebuild all slash commands on the next start. Only use this if something has gone horribly wrong!
+- `saveconfig` - Whether or not the configuration will be saved upon exiting. Defaults to true every time.
+
+The second argument for `setconfig` is any string. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, and `jetbornechannelid`, and a boolean for `resetcommands` and `saveconfig`.
 
 ## Hosting
 
@@ -32,7 +47,7 @@ In the folder is `config.cfg` and `token.txt`. `config.cfg` represents a JSON ve
 
 `token.txt` is where you should put the bot's token, which you should have gotten from the Discord developer portal. This is done not only so that I don't doxx my own bot but also so other people can use their own bots to host ATCBot's code. You must set `token.txt` before running the bot otherwise it will either close after realizing it has been duped, or crash because of a malformed token.
 
-Unless you are confident enough to edit `config.cfg` yourself, you should change all public configuration variables using the in-built slash commands after running the bot.
+Unless you are confident enough to edit `config.cfg` yourself, you should change all public configuration variables using the in-built slash commands after running the bot. The configuration will automatically save if you have not specified not to, and you exit using the `shutdown` command. Closing it via the console window will not save the config.
 
 ### Monitoring
 

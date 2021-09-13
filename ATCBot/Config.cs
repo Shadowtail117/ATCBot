@@ -23,6 +23,22 @@ namespace ATCBot
         public string token;
 
         /// <summary>
+        /// Whether or not the config should save to disk when the program exits.
+        /// </summary>
+        [JsonIgnore]
+        public bool shouldSave = true;
+
+        /// <summary>
+        /// The Discord channel ID to post the VTOL lobby information in.
+        /// </summary>
+        public ulong vtolLobbyChannelId;
+
+        /// <summary>
+        /// The Discord channel ID to post the Jetborne lobby information in.
+        /// </summary>
+        public ulong jetborneLobbyChannelId;
+
+        /// <summary>
         /// Whether or not the bot should build commands.
         /// </summary>
         /// <remarks>Will automatically set itself to false after building, edit the config directly to re-enable.</remarks>

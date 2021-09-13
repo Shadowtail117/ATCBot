@@ -21,6 +21,8 @@ namespace ATCBot.Commands
             .WithRequired(true)
             .AddChoice("delay", 1)
             .AddChoice("updating", 2)
+            .AddChoice("vtolchannelid", 3)
+            .AddChoice("jetbornechannelid", 4)
             .WithType(ApplicationCommandOptionType.Integer)
         );                
 
@@ -30,14 +32,14 @@ namespace ATCBot.Commands
             {
                 if (u.GuildPermissions.ManageGuild == true)
                 {
-                    switch(Convert.ToInt32(command.Data.Options.First().Value))
+                    return Convert.ToInt32(command.Data.Options.First().Value) switch
                     {
-                        case 1:
-                            return Program.config.delay.ToString();
-                        case 2:
-                            return Program.shouldUpdate.ToString();
-                        default: throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"");
-                    }
+                        1 => Program.config.delay.ToString(),
+                        2 => Program.shouldUpdate.ToString(),
+                        3 => Program.config.vtolLobbyChannelId.ToString(),
+                        4 => Program.config.jetborneLobbyChannelId.ToString(),
+                        _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\""),
+                    };
                 }
                 else return "Sorry, you don't have enough permissions for this!";
             }

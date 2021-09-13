@@ -20,6 +20,10 @@ namespace ATCBot.Commands
                 await command.RespondAsync(c.Action(command));
             }
             else throw new Exception("Impossible client interaction!");
+            if(Program.shouldShutdown)
+            {
+                Environment.Exit(0);
+            }
         }
     }
 }
