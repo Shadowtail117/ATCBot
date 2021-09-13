@@ -9,8 +9,16 @@ using Discord.WebSocket;
 
 namespace ATCBot.Commands
 {
+    /// <summary>
+    /// Class to handle invocation of slash commands.
+    /// </summary>
     public class CommandHandler
     {
+        /// <summary>
+        /// Called whenever a slash command is invoked to the bot.
+        /// </summary>
+        /// <param name="arg">The context of the command.</param>
+        /// <exception cref="Exception">Thrown if an interaction other than a slash command is registered, as that shouldn't be possible.</exception>
         public async Task ClientInteractionCreated(SocketInteraction arg)
         {
             if (arg is SocketSlashCommand command)

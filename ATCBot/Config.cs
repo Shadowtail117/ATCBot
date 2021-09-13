@@ -6,11 +6,15 @@ using System.IO;
 namespace ATCBot
 {
     /// <summary>
-    /// Class to show the bot's config. Loaded when the project is started and automatically saved when it closes.
+    /// Class to show the bot's config. Loaded when the project is started and automatically saved when it closes if <cref>shouldSave</cref> is true.
     /// </summary>
     public class Config
     {
+        /// <summary>
+        /// A global config to use for this instance of the bot.
+        /// </summary>
         public static Config config;
+
         /// <summary>
         /// The current version of the bot.
         /// </summary>
