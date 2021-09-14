@@ -1,6 +1,4 @@
-using System;
 using SteamKit2;
-using Steamworks.Data;
 
 namespace ATCBot.Structs
 {

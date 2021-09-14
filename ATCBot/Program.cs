@@ -4,9 +4,6 @@ using ATCBot.Structs;
 using Discord;
 using Discord.WebSocket;
 
-using Steamworks;
-using Steamworks.Data;
-
 using System;
 using System.Collections.Generic;
 using System.Text;
