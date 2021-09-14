@@ -9,9 +9,19 @@ using System.Threading.Tasks;
 
 namespace ATCBot.Commands
 {
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
     class GetConfig : Command
     {
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public override string Name { get; set; } = "getconfig";
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
         .WithName("getconfig")
         .WithDescription("Get the value of a configuration option.")
@@ -24,8 +34,13 @@ namespace ATCBot.Commands
             .AddChoice("vtolchannelid", 3)
             .AddChoice("jetbornechannelid", 4)
             .WithType(ApplicationCommandOptionType.Integer)
-        );                
+        );
 
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        /// <param name="command"><inheritdoc/></param>
+        /// <returns><inheritdoc/></returns>
         public override string Action(SocketSlashCommand command)
         {
             if (command.User is SocketGuildUser u)

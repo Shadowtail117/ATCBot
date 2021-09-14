@@ -11,14 +11,27 @@ using System.Threading.Tasks;
 
 namespace ATCBot
 {
+    /// <summary>
+    /// Main class.
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// The Steam game ID of VTOL VR.
+        /// </summary>
         public const int vtolID = 667970;
+
+        /// <summary>
+        /// The Steam game ID of Jetborne Racing.
+        /// </summary>
         public const int jetborneID = 1397650;
 
         private ulong vtolLobbyMessageId;
         private ulong jetborneLobbyMessageId;
 
+        /// <summary>
+        /// The program's instance of the bot.
+        /// </summary>
         public DiscordSocketClient client;
 
         private CommandBuilder commandBuilder;
@@ -29,10 +42,19 @@ namespace ATCBot
 
         private static bool forceDontSaveConfig = false;
         
+        /// <summary>
+        /// Whether or not we should be updating the lobby information.
+        /// </summary>
         public static bool shouldUpdate = false;
 
+        /// <summary>
+        /// The current instance of the config.
+        /// </summary>
         public static Config config = Config.config;
 
+        /// <summary>
+        /// Whether or not we should immediately shutdown.
+        /// </summary>
         public static bool shouldShutdown = false;
 
         static void Main(string[] args)
@@ -55,7 +77,7 @@ namespace ATCBot
             new Program().MainAsync().GetAwaiter().GetResult();
         }
 
-        public async Task MainAsync()
+        async Task MainAsync()
         {
             client = new DiscordSocketClient();
             client.Log += Log;
@@ -70,6 +92,11 @@ namespace ATCBot
             await Task.Delay(-1);
         }
 
+        /// <summary>
+        /// Logs a message. Use this over <see cref="Console.WriteLine()"/> when possible.
+        /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Info and no source.</remarks>
+        /// <param name="message">The message to be logged.</param>
         public static async Task Log(string message)
         {
             await Log(new LogMessage(LogSeverity.Info, string.Empty, message));
@@ -95,6 +122,9 @@ namespace ATCBot
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Update the lobby information, either editing past messages or creating new ones.
+        /// </summary>
         public async Task UpdateLobbyInformation()
         {
             //VTOL lobbies
@@ -175,7 +205,7 @@ namespace ATCBot
 
         //Event methods vvv
 
-        public async Task ClientReady()
+        async Task ClientReady()
         {
             commandHandler = new();
             commandBuilder = new(client);
@@ -183,7 +213,7 @@ namespace ATCBot
             await commandBuilder.BuildCommands();
         }
         
-        private static void OnExit(object sender, EventArgs e)
+        static void OnExit(object sender, EventArgs e)
         {
             if (forceDontSaveConfig) return;
             Console.WriteLine("------");

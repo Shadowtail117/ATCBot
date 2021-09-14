@@ -1,4 +1,4 @@
-# ATCBot v0.3.0
+# ATCBot v1.0.0
 [![.NET](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
@@ -8,6 +8,10 @@ ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetc
 ATCBot will publish lobby information using a singular message, preferably within its own channel(s) on the server. It will fetch lobby information continuously except when told to stop, and will wait a variable amount of time per second based on the configuration that it is running.
 
 Most variables of the bot are changeable using slash commands. See below.
+
+### Steamworks
+
+ATCBot uses Steamworks to fetch lobby information. Steamworks requires a logged in Steam account to be present on the machine hosting it. If there isn't, ATCBot will not work properly!
 
 ## Commands
 
