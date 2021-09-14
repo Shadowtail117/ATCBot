@@ -97,7 +97,7 @@ namespace ATCBot
                 Username = SteamConfig.Config.SteamUserName,
                 Password = SteamConfig.Config.SteamPassword,
                 AuthCode = SteamConfig.Config.AuthCode,
-                TwoFactorCode = SteamConfig.Config.F2ACode,
+                TwoFactorCode = SteamConfig.Config.TwoFactorAuthCode,
                 SentryFileHash = sentryHash
             });
         }

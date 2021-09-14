@@ -8,7 +8,7 @@ namespace ATCBot
         public static SteamConfig Config;
         public string SteamUserName;
         public string SteamPassword;
-        public string F2ACode;
+        public string TwoFactorAuthCode;
         public string AuthCode;
         
         private static readonly string directory = Directory.GetCurrentDirectory();
