@@ -1,3 +1,5 @@
+using System;
+using SteamKit2;
 using Steamworks.Data;
 
 namespace ATCBot.Structs
@@ -9,12 +11,12 @@ namespace ATCBot.Structs
         public string ScenarioText;
         public int MemberCount;
 
-        public VTOLLobby(Lobby lobby)
+        public VTOLLobby(SteamMatchmaking.Lobby lobby)
         {
-            LobbyName = lobby.GetData("lName");
-            OwnerName = lobby.GetData("oName");
-            ScenarioText = lobby.GetData("scn");
-            MemberCount = lobby.MemberCount;
+            LobbyName = lobby.Metadata["lName"];
+            OwnerName = lobby.Metadata["oName"];
+            ScenarioText = lobby.Metadata["scn"];
+            MemberCount = lobby.NumMembers;
         }
     }
 }

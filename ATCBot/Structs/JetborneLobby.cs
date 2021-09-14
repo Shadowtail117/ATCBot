@@ -1,4 +1,5 @@
-using Steamworks.Data;
+using System;
+using SteamKit2;
 
 namespace ATCBot.Structs
 {
@@ -9,13 +10,23 @@ namespace ATCBot.Structs
         public int MemberCount;
         public string RaceLaps;
         public string CurrentLap;
-        public JetborneLobby(Lobby lobby)
+        public string Map;
+
+        public JetborneLobby(SteamMatchmaking.Lobby lobby)
         {
-            LobbyName = lobby.GetData("name");
-            OwnerName = lobby.GetData("ownerName");
-            MemberCount = lobby.MemberCount;
-            RaceLaps = lobby.GetData("raceLaps");
-            CurrentLap = lobby.GetData("currentLap");
+            LobbyName = lobby.Metadata["name"];
+            OwnerName = lobby.Metadata["ownerName"];
+            RaceLaps = lobby.Metadata["raceLaps"];
+            Map = lobby.Metadata["map"];
+            if (lobby.Metadata.TryGetValue("currentLap", out string value))
+            {
+                CurrentLap = value;
+            }
+            else
+            {
+                CurrentLap = string.Empty;
+            }
+            MemberCount = lobby.NumMembers;
         }
     }
 }
