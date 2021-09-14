@@ -25,16 +25,25 @@ namespace ATCBot
         }
         
         
-        public static SteamConfig Load()
+        public static bool Load()
         {
             if (!Directory.Exists(saveDirectory) || !File.Exists(saveFile))
             {
-                Program.Log($"steam.json doesn't exist. Creating one!");
+                Program.Log($"steam.json doesn't exist. Creating one! " +
+                            $"Please add your steam details int steam.json");
                 Save(new SteamConfig());
+                return false;
             }
             
             Config = JsonConvert.DeserializeObject<SteamConfig>(File.ReadAllText(saveFile));
-            return Config;
+
+            if (Config.SteamUserName == null || Config.SteamPassword == null)
+            {
+                Program.Log($"{saveFile} has no steam login details. Please put your login details in there.");
+                return false;
+            }
+            
+            return true;
         }
     }
 }

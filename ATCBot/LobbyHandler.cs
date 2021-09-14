@@ -49,7 +49,6 @@ namespace ATCBot
         
         private void SetupSteam()
         {
-            SteamConfig.Load();
             client = new SteamClient();
             manager = new CallbackManager(client);
             matchmaking = client.GetHandler<SteamMatchmaking>();

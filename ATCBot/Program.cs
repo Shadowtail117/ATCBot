@@ -74,6 +74,11 @@ namespace ATCBot
                 return;
             }
 
+            if (!SteamConfig.Load())
+            {
+                return;
+            }
+
             new Program().MainAsync().GetAwaiter().GetResult();
         }
 
