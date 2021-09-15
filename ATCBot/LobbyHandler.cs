@@ -185,7 +185,7 @@ namespace ATCBot
                 SentryFileHash = sentryHash,
             } );
 
-            Program.Log("Done!");
+            Console.WriteLine("Done!");
         }
 
         private async Task GetLobbies()
