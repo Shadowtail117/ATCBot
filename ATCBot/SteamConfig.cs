@@ -39,7 +39,7 @@ namespace ATCBot
 
             if (Config.SteamUserName == null || Config.SteamPassword == null)
             {
-                Program.Log($"{saveFile} has no steam login details. Please put your login details in there.");
+                Console.WriteLine($"{saveFile} has no steam login details. Please put your login details in there.");
                 return false;
             }
             
