@@ -21,7 +21,7 @@ namespace ATCBot
                 Directory.CreateDirectory(saveDirectory);
             
             File.WriteAllText(saveFile, JsonConvert.SerializeObject(config));
-            Program.Log($"Saved config to {saveFile}");
+            Console.WriteLine($"Saved config to {saveFile}");
         }
         
         
