@@ -13,11 +13,4 @@
     <PackageReference Include="Discord.Net.Labs" Version="3.0.2" />
     <PackageReference Include="SteamKit2" Version="2.4.0-Alpha.3" />
   </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Dependencies\steam_api64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
