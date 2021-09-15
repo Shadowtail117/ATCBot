@@ -144,7 +144,7 @@ namespace ATCBot
         
         private void OnMachineAuth(SteamUser.UpdateMachineAuthCallback callback)
         {
-            Program.Log("Updating sentryfile...");
+            Console.WriteLine("Updating sentryfile...");
 
             // write out our sentry file
             // ideally we'd want to write to the filename specified in the callback
