@@ -53,6 +53,11 @@ namespace ATCBot
         /// </summary>
         public int delay = 5;
 
+        /// <summary>
+        /// The time in seconds for steam to timeout.
+        /// </summary>
+        public int steamTimeout = 1;
+
         private static readonly string directory = Directory.GetCurrentDirectory();
         private static readonly string saveDirectory = Path.Combine(directory, @"Config");
         private static readonly string saveFile = Path.Combine(saveDirectory, @"config.cfg");

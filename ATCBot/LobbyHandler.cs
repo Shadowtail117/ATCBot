@@ -14,6 +14,7 @@ namespace ATCBot
     class LobbyHandler
     {
         public TimeSpan delay = TimeSpan.FromSeconds(Program.config.delay);
+        public TimeSpan steamTimeout = TimeSpan.FromSeconds(Program.config.steamTimeout);
 
         public List<VTOLLobby> vtolLobbies = new();
         public List<JetborneLobby> jetborneLobbies = new();
@@ -47,7 +48,7 @@ namespace ATCBot
             SetupSteam();
         }
         
-        private void SetupSteam()
+        private async void SetupSteam()
         {
             client = new SteamClient();
             manager = new CallbackManager(client);
@@ -56,15 +57,16 @@ namespace ATCBot
 
             SetupCallbacks();
 
-            Program.Log("Connecting to steam");
+            await Program.Log("Connecting to steam");
             running = true;
             client.Connect();
 
+            // This needs to run on another thread to continue the program
             Task.Run(() =>
             {
                 while (running)
                 {
-                    manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
+                    manager.RunWaitCallbacks(steamTimeout);
                 }
             });
 
@@ -190,7 +192,7 @@ namespace ATCBot
         {
             if (!loggedIn)
             {
-                Program.Log("Steam isn't running yet");
+                await Program.Log("Steam isn't running yet");
                 return;
             }
             
