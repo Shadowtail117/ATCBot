@@ -40,7 +40,7 @@ namespace ATCBot
                 Directory.CreateDirectory(saveDirectory);
             
             File.WriteAllText(saveFile, JsonConvert.SerializeObject(config));
-            Program.Log($"Saved config to {saveFile}");
+            Console.WriteLine($"Saved config to {saveFile}");
         }
         
         
@@ -58,7 +58,7 @@ namespace ATCBot
 
             if (Config.SteamUserName == null || Config.SteamPassword == null)
             {
-                Program.Log($"{saveFile} has no steam login details. Please put your login details in there.");
+                Console.WriteLine($"{saveFile} has no steam login details. Please put your login details in there.");
                 return false;
             }
             
