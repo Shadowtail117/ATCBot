@@ -45,10 +45,10 @@ namespace ATCBot
         public LobbyHandler(Program program)
         {
             this.program = program;
-            SetupSteam();
+            SetupSteam().GetAwaiter().GetResult();
         }
         
-        private async void SetupSteam()
+        private async Task SetupSteam()
         {
             client = new SteamClient();
             manager = new CallbackManager(client);
