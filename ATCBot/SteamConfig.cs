@@ -5,10 +5,29 @@ namespace ATCBot
 {
     public class SteamConfig
     {
+        /// <summary>
+        /// A global steam config to use for this instance of the bot.
+        /// </summary>
         public static SteamConfig Config;
+        
+        /// <summary>
+        /// The username of the steam account which will be logged into.
+        /// </summary>
         public string SteamUserName;
+        
+        /// <summary>
+        /// The password for the steam account which will be logged into.
+        /// </summary>
         public string SteamPassword;
+        
+        /// <summary>
+        /// The two factor authentication code to be used if the steam account has 2FA enabled.
+        /// </summary>
         public string TwoFactorAuthCode;
+        
+        /// <summary>
+        /// The steam guard code to be used if the steam account has it enabled.
+        /// </summary>
         public string AuthCode;
         
         private static readonly string directory = Directory.GetCurrentDirectory();
