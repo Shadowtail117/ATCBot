@@ -81,6 +81,7 @@ namespace ATCBot
                 return;
             }
 
+            Console.WriteLine();
             new Program().MainAsync().GetAwaiter().GetResult();
         }
 
@@ -93,14 +94,16 @@ namespace ATCBot
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
 
-            lobbyHandler = new(this);
-            await lobbyHandler.QueryTimer();
-
-            if(!await Version.CheckVersion())
+            if (!await Version.CheckVersion())
             {
                 await Log(new LogMessage(LogSeverity.Warning, "Version Checker", $"Version mismatch! Please update ATCBot when possible. Local version: " +
                     $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}"));
             }
+
+            lobbyHandler = new(this);
+            await Task.Run(() => lobbyHandler.QueryTimer());
+
+
 
             await Task.Delay(-1);
         }

@@ -17,17 +17,14 @@ namespace ATCBot
         /// <summary>
         /// The local version of the bot.
         /// </summary>
-        public static string LocalVersion { get; private set; } = File.ReadAllText(local);
+        public static string LocalVersion { get; } = "1.1.0";
 
         /// <summary>
         /// The remote version on the repository.
         /// </summary>
         public static string RemoteVersion { get; private set; }
 
-        //private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/dev/ATCBot/version.txt";
         private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/versioncheck/ATCBot/version.txt";
-
-        private static readonly string local = Path.Combine(Directory.GetCurrentDirectory(), @"version.txt");
 
         /// <summary>
         /// Retrieve the remote version stored on the repository and verify it matches the local version.
