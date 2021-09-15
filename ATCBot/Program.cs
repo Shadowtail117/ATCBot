@@ -76,7 +76,10 @@ namespace ATCBot
 
             if (!SteamConfig.Load())
             {
+                Console.WriteLine("Could not load Steam config. Aborting. Press any key to exit.
+                Console.ReadKey();
                 return;
+
             }
 
             new Program().MainAsync().GetAwaiter().GetResult();
