@@ -24,7 +24,9 @@ namespace ATCBot
         /// </summary>
         public static string RemoteVersion { get; private set; }
 
-        private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/dev/ATCBot/version.txt";
+        //private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/dev/ATCBot/version.txt";
+        private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/versioncheck/ATCBot/version.txt";
+
         private static readonly string local = Path.Combine(Directory.GetCurrentDirectory(), @"version.txt");
 
         /// <summary>
