@@ -1,13 +1,13 @@
 ﻿using ATCBot.Structs;
 
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using SteamKit2;
+
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using SteamKit2;
+using System.Threading.Tasks;
 
 namespace ATCBot
 {
@@ -20,9 +20,9 @@ namespace ATCBot
         public List<JetborneLobby> jetborneLobbies = new();
 
         public Program program;
-        
+
         private bool loggedIn;
-        
+
         private SteamClient client;
         private CallbackManager manager;
         private SteamUser user;
@@ -30,7 +30,7 @@ namespace ATCBot
 
         public async Task QueryTimer()
         {
-            if(Program.shouldUpdate)
+            if (Program.shouldUpdate)
             {
                 Program.LogVerbose("Updating...", "Lobby Handler");
                 manager.RunWaitCallbacks(steamTimeout);
@@ -41,13 +41,13 @@ namespace ATCBot
             await Task.Delay(delay);
             await QueryTimer();
         }
-        
+
         public LobbyHandler(Program program)
         {
             this.program = program;
             SetupSteam();
         }
-        
+
         private void SetupSteam()
         {
             client = new SteamClient();
@@ -69,7 +69,7 @@ namespace ATCBot
             manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
             manager.Subscribe<SteamUser.UpdateMachineAuthCallback>(OnMachineAuth);
         }
-        
+
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
             Program.LogInfo($"Connected to steam. Logging into {SteamConfig.Config.SteamUserName}");
@@ -78,10 +78,10 @@ namespace ATCBot
             string sentryPath = Path.Combine(Directory.GetCurrentDirectory(), "sentry.bin");
             if (File.Exists(sentryPath))
             {
-                byte[] sentryFile = File.ReadAllBytes( "sentry.bin" );
-                sentryHash = CryptoHelper.SHAHash( sentryFile );
+                byte[] sentryFile = File.ReadAllBytes("sentry.bin");
+                sentryHash = CryptoHelper.SHAHash(sentryFile);
             }
-            
+
             user.LogOn(new SteamUser.LogOnDetails()
             {
                 Username = SteamConfig.Config.SteamUserName,
@@ -91,12 +91,12 @@ namespace ATCBot
                 SentryFileHash = sentryHash
             });
         }
-        
+
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
             Program.LogInfo("Disconnected from Steam");
         }
-        
+
         private async void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
             bool hasSteamGuard = callback.Result == EResult.AccountLogonDenied;
@@ -107,13 +107,13 @@ namespace ATCBot
                 Program.LogInfo($"Emailed Auth Code was invalid. Please update the steam.json and try again");
                 return;
             }
-            
+
             if (hasF2A)
             {
                 Program.LogInfo("F2A code was invalid. Please update the steam.json and try again");
                 return;
             }
-            
+
             if (callback.Result != EResult.OK)
             {
                 Program.LogInfo($"Failed to log into steam. {callback.Result} {callback.ExtendedResult}");
@@ -130,7 +130,7 @@ namespace ATCBot
         {
             loggedIn = false;
         }
-        
+
         private void OnMachineAuth(SteamUser.UpdateMachineAuthCallback callback)
         {
             Console.WriteLine("Updating sentryfile...");
@@ -142,21 +142,21 @@ namespace ATCBot
 
             int fileSize;
             byte[] sentryHash;
-            using ( var fs = File.Open( "sentry.bin", FileMode.OpenOrCreate, FileAccess.ReadWrite ) )
+            using (var fs = File.Open("sentry.bin", FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 fs.Seek(callback.Offset, SeekOrigin.Begin);
                 fs.Write(callback.Data, 0, callback.BytesToWrite);
-                fileSize = ( int )fs.Length;
+                fileSize = (int)fs.Length;
 
                 fs.Seek(0, SeekOrigin.Begin);
-                using ( var sha = SHA1.Create() )
+                using (var sha = SHA1.Create())
                 {
-                    sentryHash = sha.ComputeHash( fs );
+                    sentryHash = sha.ComputeHash(fs);
                 }
             }
 
             // inform the steam servers that we're accepting this sentry file
-            user.SendMachineAuthResponse( new SteamUser.MachineAuthDetails
+            user.SendMachineAuthResponse(new SteamUser.MachineAuthDetails
             {
                 JobID = callback.JobID,
 
@@ -172,7 +172,7 @@ namespace ATCBot
                 OneTimePassword = callback.OneTimePassword,
 
                 SentryFileHash = sentryHash,
-            } );
+            });
 
             Console.WriteLine("Done!");
         }
@@ -184,13 +184,13 @@ namespace ATCBot
                 Program.LogInfo("Steam isn't running yet");
                 return;
             }
-            
+
             vtolLobbies.Clear();
             jetborneLobbies.Clear();
-            
+
             var vLobbyList = await matchmaking.GetLobbyList(Program.vtolID);
             var jLobbyList = await matchmaking.GetLobbyList(Program.jetborneID);
-            
+
             vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
             jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)));
         }

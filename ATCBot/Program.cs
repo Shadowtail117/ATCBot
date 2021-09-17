@@ -5,11 +5,7 @@ using Discord;
 using Discord.WebSocket;
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using System.IO;
-using System.Net;
 
 namespace ATCBot
 {
@@ -43,7 +39,7 @@ namespace ATCBot
         private LobbyHandler lobbyHandler;
 
         private static bool forceDontSaveConfig = false;
-        
+
         /// <summary>
         /// Whether or not we should be updating the lobby information.
         /// </summary>
@@ -219,13 +215,13 @@ namespace ATCBot
 
                 var vtolChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.vtolLobbyChannelId);
 
-                if(vtolChannel == null)
+                if (vtolChannel == null)
                 {
                     LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder");
                     return;
                 }
 
-                if(vtolLobbyMessageId != 0 && await vtolChannel.GetMessageAsync(vtolLobbyMessageId) != null)
+                if (vtolLobbyMessageId != 0 && await vtolChannel.GetMessageAsync(vtolLobbyMessageId) != null)
                 {
                     await vtolChannel.ModifyMessageAsync(vtolLobbyMessageId, m => m.Embed = vtolEmbedBuilder.Build());
                 }
@@ -234,7 +230,7 @@ namespace ATCBot
                     var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
                     vtolLobbyMessageId = newMessage.Id;
                 }
-                
+
             }
 
             //JBR lobbies
@@ -290,7 +286,7 @@ namespace ATCBot
             client.InteractionCreated += commandHandler.ClientInteractionCreated;
             await commandBuilder.BuildCommands();
         }
-        
+
         static void OnExit(object sender, EventArgs e)
         {
             if (forceDontSaveConfig) return;

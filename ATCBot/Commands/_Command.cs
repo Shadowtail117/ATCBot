@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
 
-using System;
 using System.Collections.Generic;
 
 namespace ATCBot.Commands
@@ -26,7 +25,7 @@ namespace ATCBot.Commands
         /// The slash command builder used to create the command. Must be initialized at declaration.
         /// </summary>
         public abstract SlashCommandBuilder Builder { get; set; }
-        
+
         /// <summary>
         /// The action to take when this command is invoked.
         /// </summary>

@@ -2,10 +2,7 @@
 using Discord.WebSocket;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ATCBot.Commands
 {
@@ -37,11 +34,11 @@ namespace ATCBot.Commands
                     ulong value;
                     bool boolValue;
 
-                    switch(Convert.ToInt32(command.Data.Options.First().Value))
+                    switch (Convert.ToInt32(command.Data.Options.First().Value))
                     {
                         case 1:
                             successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
-                            if(successful)
+                            if (successful)
                             {
                                 Program.config.delay = (int)value;
                                 return $"Successfully set delay to {value} seconds!";
@@ -53,7 +50,7 @@ namespace ATCBot.Commands
 
                         case 2:
                             successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
-                            if(successful)
+                            if (successful)
                             {
                                 Program.config.vtolLobbyChannelId = value;
                                 return $"Successfully set VTOL lobby channel ID to {value}!";
@@ -91,7 +88,7 @@ namespace ATCBot.Commands
                                 }
                             }
                             else return $"Sorry, I couldn't translate your input to a true/false boolean.";
-                            
+
                         case 5:
                             successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
                             if (successful)
