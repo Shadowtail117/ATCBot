@@ -24,7 +24,7 @@ namespace ATCBot
         /// </summary>
         public static string RemoteVersion { get; private set; }
 
-        private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/versioncheck/ATCBot/version.txt";
+        private static readonly string url = "https://raw.githubusercontent.com/Shadowtail117/ATCBot/releases/ATCBot/version.txt";
 
         /// <summary>
         /// Retrieve the remote version stored on the repository and verify it matches the local version.
