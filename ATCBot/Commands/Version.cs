@@ -27,7 +27,7 @@ namespace ATCBot.Commands
         /// <returns><inheritdoc/></returns>
         public override string Action(SocketSlashCommand command)
         {
-            return "ATCBot is running version " + Config.version;
+            return "ATCBot is running version " + ATCBot.Version.LocalVersion;
         }
     }
 }

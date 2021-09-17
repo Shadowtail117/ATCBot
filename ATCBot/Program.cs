@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Net;
 
 namespace ATCBot
 {
@@ -40,6 +42,7 @@ namespace ATCBot
 
         private LobbyHandler lobbyHandler;
 
+
         private static bool forceDontSaveConfig = false;
         
         /// <summary>
@@ -60,8 +63,9 @@ namespace ATCBot
         static void Main(string[] args)
         {
             //Stuff to set up the console
-            Console.Title = "ATCBot v." + Config.version;
-            Console.WriteLine($"Booting up ATCBot version {Config.version}.");
+            Console.Title = "ATCBot v." + Version.LocalVersion;
+            Console.WriteLine($"Booting up ATCBot version {Version.LocalVersion}.");
+
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnExit);
 
             config = new Config();
@@ -94,8 +98,16 @@ namespace ATCBot
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
 
+            if (!await Version.CheckVersion())
+            {
+                await Log(new LogMessage(LogSeverity.Warning, "Version Checker", $"Version mismatch! Please update ATCBot when possible. Local version: " +
+                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}"));
+            }
+
             lobbyHandler = new(this);
-            await lobbyHandler.QueryTimer();
+            await Task.Run(() => lobbyHandler.QueryTimer());
+
+
 
             await Task.Delay(-1);
         }
