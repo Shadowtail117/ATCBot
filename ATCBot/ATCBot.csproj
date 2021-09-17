@@ -10,17 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Discord.Net.Labs" Version="3.0.2" />
-    <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
+    <None Remove="documentation.xml" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Dependencies\steam_api64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="steam_api64.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="Discord.Net.Labs" Version="3.0.2" />
+    <PackageReference Include="SteamKit2" Version="2.4.0-Alpha.3" />
   </ItemGroup>
-
 </Project>

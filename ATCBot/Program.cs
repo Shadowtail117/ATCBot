@@ -4,13 +4,12 @@ using ATCBot.Structs;
 using Discord;
 using Discord.WebSocket;
 
-using Steamworks;
-using Steamworks.Data;
-
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Net;
 
 namespace ATCBot
 {
@@ -63,8 +62,9 @@ namespace ATCBot
         static void Main(string[] args)
         {
             //Stuff to set up the console
-            Console.Title = "ATCBot v." + Config.version;
-            Console.WriteLine($"Booting up ATCBot version {Config.version}.");
+            Console.Title = "ATCBot v." + Version.LocalVersion;
+            Console.WriteLine($"Booting up ATCBot version {Version.LocalVersion}.");
+
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnExit);
 
             config = new Config();
@@ -77,38 +77,102 @@ namespace ATCBot
                 return;
             }
 
+            if (!SteamConfig.Load())
+            {
+                Console.WriteLine("Could not load Steam config. Aborting. Press any key to exit.");
+                Console.ReadKey();
+                return;
+
+            }
+
             new Program().MainAsync().GetAwaiter().GetResult();
         }
 
         async Task MainAsync()
         {
             client = new DiscordSocketClient();
-            client.Log += Log;
+            client.Log += DiscordLog;
             client.Ready += ClientReady;
 
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
 
+            if (!await Version.CheckVersion())
+            {
+                LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
+                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker");
+            }
+
             lobbyHandler = new(this);
+
             await lobbyHandler.QueryTimer();
 
             await Task.Delay(-1);
         }
 
-        /// <summary>
-        /// Logs a message. Use this over <see cref="Console.WriteLine()"/> when possible.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Info and no source.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        public static async Task Log(string message)
+        private static Task DiscordLog(LogMessage message)
         {
-            await Log(new LogMessage(LogSeverity.Info, string.Empty, message));
+            Log(message);
+            return Task.CompletedTask;
         }
+
         /// <summary>
-        /// Logs a message. Use this over <see cref="Console.WriteLine()"/> when possible.
+        /// Logs an informational message.
         /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Info.
+        /// </remarks>
         /// <param name="message">The message to be logged.</param>
-        public static Task Log(LogMessage message)
+        /// <param name="source">The source of the message.</param>
+        public static void LogInfo(string message, string source = "") => Log(new LogMessage(LogSeverity.Info, source, message));
+
+        /// <summary>
+        /// Logs a warning message.
+        /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Warning.</remarks>
+        /// <param name="message">The message to be logged.</param>
+        /// <param name="source">The source of the message.</param>
+        public static void LogWarning(string message, string source = "") => Log(new LogMessage(LogSeverity.Warning, source, message));
+
+        /// <summary>
+        /// Logs an error message along with the exception.
+        /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Error.</remarks>
+        /// <param name="message">The message to be logged.</param>
+        /// <param name="e">The exception to be logged.</param>
+        /// <param name="source">The source of the message.</param>
+        public static void LogError(string message, Exception e, string source = "") => Log(new LogMessage(LogSeverity.Error, source, message, e));
+
+        /// <summary>
+        /// Logs a critical error message along with the exception.
+        /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Critical.</remarks>
+        /// <param name="message">The message to be logged.</param>
+        /// <param name="e">The exception to be logged.</param>
+        /// <param name="source">The source of the message.</param>
+        public static void LogCritical(string message, Exception e, string source = "") => Log(new LogMessage(LogSeverity.Error, source, message, e));
+
+        /// <summary>
+        /// Logs a debug message along with the exception.
+        /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Debug.</remarks>
+        /// <param name="message">The message to be logged.</param>
+        /// <param name="source">The source of the message.</param>
+        public static void LogDebug(string message, string source = "") => Log(new LogMessage(LogSeverity.Debug, source, message));
+
+        /// <summary>
+        /// Logs a verbose message along with the exception.
+        /// </summary>
+        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Verbose.</remarks>
+        /// <param name="message">The message to be logged.</param>
+        /// <param name="source">The source of the message.</param>
+        public static void LogVerbose(string message, string source = "") => Log(new LogMessage(LogSeverity.Verbose, source, message));
+
+        /// <summary>
+        /// Logs a message.
+        /// </summary>
+        /// <remarks>Use when another logging method is not precise enough.</remarks>
+        /// <param name="message">The message to be logged.</param>
+        public static void Log(LogMessage message)
         {
             Console.ForegroundColor = message.Severity switch
             {
@@ -122,7 +186,6 @@ namespace ATCBot
             };
             Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message} {message.Exception}");
             Console.ResetColor();
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -133,7 +196,7 @@ namespace ATCBot
             //VTOL lobbies
             if (config.vtolLobbyChannelId == 0)
             {
-                await Log(new LogMessage(LogSeverity.Warning, "VTOL Embed Builder", "VTOL Lobby Channel ID is not set!"));
+                LogWarning("VTOL Lobby Channel ID is not set!", "VTOL Embed Builder");
             }
             else
             {
@@ -145,7 +208,7 @@ namespace ATCBot
                     {
                         if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioText == string.Empty)
                         {
-                            await Log(new LogMessage(LogSeverity.Warning, "VTOL Embed Builder", "Invalid lobby state!"));
+                            LogWarning("Invalid lobby state!", "VTOL Embed Builder");
                             continue;
                         }
                         string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players";
@@ -155,6 +218,12 @@ namespace ATCBot
                 else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
 
                 var vtolChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.vtolLobbyChannelId);
+
+                if(vtolChannel == null)
+                {
+                    LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder");
+                    return;
+                }
 
                 if(vtolLobbyMessageId != 0 && await vtolChannel.GetMessageAsync(vtolLobbyMessageId) != null)
                 {
@@ -171,7 +240,7 @@ namespace ATCBot
             //JBR lobbies
             if (config.jetborneLobbyChannelId == 0)
             {
-                await Log(new LogMessage(LogSeverity.Warning, "JBR Embed Builder", "JBR Lobby Channel ID is not set!"));
+                LogWarning("JBR Lobby Channel ID is not set!", "JBR Embed Builder");
             }
             else
             {
@@ -183,7 +252,7 @@ namespace ATCBot
                     {
                         if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
                         {
-                            await Log(new LogMessage(LogSeverity.Warning, "JBR Embed Builder", "Invalid lobby state!"));
+                            LogWarning("Invalid lobby state!", "JBR Embed Builder");
                             continue;
                         }
                         string content = $"{lobby.MemberCount} Players\nLap {lobby.CurrentLap}/{lobby.RaceLaps}";
@@ -193,6 +262,12 @@ namespace ATCBot
                 else jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
 
                 var jetborneChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.jetborneLobbyChannelId);
+
+                if (jetborneChannel == null)
+                {
+                    LogWarning("JBR Lobby Channel ID is incorrect!", "JBR Embed Builder");
+                    return;
+                }
 
                 if (jetborneLobbyMessageId != 0 && await jetborneChannel.GetMessageAsync(jetborneLobbyMessageId) != null)
                 {

@@ -16,11 +16,6 @@ namespace ATCBot
         public static Config config;
 
         /// <summary>
-        /// The current version of the bot.
-        /// </summary>
-        public static readonly string version = "1.0.0";
-
-        /// <summary>
         /// The bot's token. Loaded externally from <see cref="saveFile"/>.
         /// </summary>
         [JsonIgnore]
@@ -52,6 +47,11 @@ namespace ATCBot
         /// The time in seconds to wait between server updates.
         /// </summary>
         public int delay = 5;
+
+        /// <summary>
+        /// The time in seconds for steam to timeout.
+        /// </summary>
+        public int steamTimeout = 1;
 
         private static readonly string directory = Directory.GetCurrentDirectory();
         private static readonly string saveDirectory = Path.Combine(directory, @"Config");
