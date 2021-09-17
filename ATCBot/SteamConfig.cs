@@ -4,6 +4,9 @@ using Newtonsoft.Json;
 
 namespace ATCBot
 {
+    /// <summary>
+    /// Contains configuration for SteamKit2.
+    /// </summary>
     public class SteamConfig
     {
         /// <summary>
@@ -40,16 +43,19 @@ namespace ATCBot
             if (!Directory.Exists(saveDirectory))
                 Directory.CreateDirectory(saveDirectory);
             
-            File.WriteAllText(saveFile, JsonConvert.SerializeObject(config));
+            File.WriteAllText(saveFile, JsonConvert.SerializeObject(config, Formatting.Indented));
             Console.WriteLine($"Saved config to {saveFile}");
         }
         
-        
+        /// <summary>
+        /// Loads the config from <see cref="saveFile"/>.
+        /// </summary>
+        /// <returns>Whether or not loading was successful.</returns>
         public static bool Load()
         {
             if (!Directory.Exists(saveDirectory) || !File.Exists(saveFile))
             {
-                Program.Log($"steam.json doesn't exist. Creating one! " +
+                Program.LogInfo($"steam.json doesn't exist. Creating one! " +
                             $"Please add your steam details int steam.json");
                 Save(new SteamConfig());
                 return false;

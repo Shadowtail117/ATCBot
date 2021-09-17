@@ -40,7 +40,7 @@ namespace ATCBot
             }
             catch (HttpRequestException e)
             {
-                await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Warning, "Version Checker", "Could not get remote version!", e));
+                Program.LogError("Could not get remote version!", e, "Version Checker");
                 RemoteVersion = "ERR";
             }
             return LocalVersion == RemoteVersion;

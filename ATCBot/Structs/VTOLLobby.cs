@@ -1,4 +1,5 @@
 using SteamKit2;
+using System.Collections.Generic;
 
 namespace ATCBot.Structs
 {
@@ -7,6 +8,11 @@ namespace ATCBot.Structs
     /// </summary>
     public struct VTOLLobby
     {
+        /// <summary>
+        /// An empty lobby.
+        /// </summary>
+        public static readonly VTOLLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", ScenarioText = "" };
+
         /// <summary>
         /// The name of the lobby.
         /// </summary>
@@ -27,12 +33,34 @@ namespace ATCBot.Structs
         /// </summary>
         public int MemberCount;
 
+        /// <summary />
         public VTOLLobby(SteamMatchmaking.Lobby lobby)
         {
-            LobbyName = lobby.Metadata["lName"];
-            OwnerName = lobby.Metadata["oName"];
-            ScenarioText = lobby.Metadata["scn"];
-            MemberCount = lobby.NumMembers;
+            try
+            {
+                _ = lobby.Metadata["name"];
+                //If we get this far, this means this IS an MP mod lobby
+                Program.LogVerbose("Skipping over modded lobby...");
+                this = Empty;
+                return;
+            }
+            catch (KeyNotFoundException) //If we catch an error, this means this is NOT an MP mod lobby
+            {
+                
+            }
+
+            try
+            {
+                LobbyName = lobby.Metadata["lName"];
+                OwnerName = lobby.Metadata["oName"];
+                ScenarioText = lobby.Metadata["scn"];
+                MemberCount = lobby.NumMembers;
+            }
+            catch (KeyNotFoundException e) //If we catch this, this means there is an actual issue
+            {
+                Program.LogError("Could not parse lobby metadata!", e);
+                this = Empty;
+            }
         }
     }
 }

@@ -23,7 +23,15 @@ namespace ATCBot.Commands
         {
             if (arg is SocketSlashCommand command)
             {
-                await Program.Log(new LogMessage(LogSeverity.Info, command.Channel.Name, "Received slash command \"" + command.Data.Name + "\"."));
+                string argsAsText = "";
+                if (!(command.Data.Options == null))
+                {
+                    foreach (var option in command.Data.Options) argsAsText += option.Value.ToString() + ", ";
+                    argsAsText = argsAsText[0..^2];
+                }
+
+                Program.LogInfo($"Received slash command \"{command.Data.Name}\"" +
+                    argsAsText == "" ? "" : $" with arguments \"{argsAsText}\"", $"{command.User.Username} in {command.Channel.Name}");
                 Command c = Command.AllCommands.Find(c => c.Name.Equals(command.Data.Name));
                 await command.RespondAsync(c.Action(command));
             }

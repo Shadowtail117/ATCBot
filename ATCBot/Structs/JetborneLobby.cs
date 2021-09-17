@@ -29,15 +29,20 @@ namespace ATCBot.Structs
         public string RaceLaps;
 
         /// <summary>
-        /// The current lap/
+        /// The current lap.
         /// </summary>
         public string CurrentLap;
+
+        /// <summary>
+        /// The name of the map being used.
+        /// </summary>
         public string Map;
 
+        /// <summary />
         public JetborneLobby(SteamMatchmaking.Lobby lobby)
         {
             LobbyName = lobby.Metadata["name"];
-            OwnerName = lobby.Metadata["ownerName"];
+            OwnerName = lobby.Metadata["ownername"];
             RaceLaps = lobby.Metadata["raceLaps"];
             Map = lobby.Metadata["map"];
             if (lobby.Metadata.TryGetValue("currentLap", out string value))

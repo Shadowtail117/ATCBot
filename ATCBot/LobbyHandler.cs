@@ -21,8 +21,7 @@ namespace ATCBot
 
         public Program program;
         
-        private static bool running;
-        private static bool loggedIn;
+        private bool loggedIn;
         
         private SteamClient client;
         private CallbackManager manager;
@@ -33,11 +32,12 @@ namespace ATCBot
         {
             if(Program.shouldUpdate)
             {
-                await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Verbose, "Lobby Handler", "Updating..."));
+                Program.LogVerbose("Updating...", "Lobby Handler");
+                manager.RunWaitCallbacks(steamTimeout);
                 await GetLobbies();
                 await program.UpdateLobbyInformation();
             }
-            else await Program.Log(new Discord.LogMessage(Discord.LogSeverity.Verbose, "Lobby Handler", "Skipping Update..."));
+            else Program.LogVerbose("Skipping Update...", "Lobby Handler");
             await Task.Delay(delay);
             await QueryTimer();
         }
@@ -45,10 +45,10 @@ namespace ATCBot
         public LobbyHandler(Program program)
         {
             this.program = program;
-            SetupSteam().GetAwaiter().GetResult();
+            SetupSteam();
         }
         
-        private async Task SetupSteam()
+        private void SetupSteam()
         {
             client = new SteamClient();
             manager = new CallbackManager(client);
@@ -57,19 +57,8 @@ namespace ATCBot
 
             SetupCallbacks();
 
-            await Program.Log("Connecting to steam");
-            running = true;
+            Program.LogInfo("Connecting to steam");
             client.Connect();
-
-            // This needs to run on another thread to continue the program
-            Task.Run(() =>
-            {
-                while (running)
-                {
-                    manager.RunWaitCallbacks(steamTimeout);
-                }
-            });
-
         }
 
         private void SetupCallbacks()
@@ -81,9 +70,9 @@ namespace ATCBot
             manager.Subscribe<SteamUser.UpdateMachineAuthCallback>(OnMachineAuth);
         }
         
-        private async void OnConnected(SteamClient.ConnectedCallback callback)
+        private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            await Program.Log($"Connected to steam. Logging into {SteamConfig.Config.SteamUserName}");
+            Program.LogInfo($"Connected to steam. Logging into {SteamConfig.Config.SteamUserName}");
 
             byte[] sentryHash = null;
             string sentryPath = Path.Combine(Directory.GetCurrentDirectory(), "sentry.bin");
@@ -103,10 +92,9 @@ namespace ATCBot
             });
         }
         
-        private async void OnDisconnected(SteamClient.DisconnectedCallback callback)
+        private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            await Program.Log("Disconnected from Steam");
-            running = false;
+            Program.LogInfo("Disconnected from Steam");
         }
         
         private async void OnLoggedOn(SteamUser.LoggedOnCallback callback)
@@ -116,25 +104,26 @@ namespace ATCBot
 
             if (hasSteamGuard)
             {
-                await Program.Log($"Emailed Auth Code was invalid. Please update the steam.json and try again");
+                Program.LogInfo($"Emailed Auth Code was invalid. Please update the steam.json and try again");
                 return;
             }
             
             if (hasF2A)
             {
-                await Program.Log("F2A code was invalid. Please update the steam.json and try again");
+                Program.LogInfo("F2A code was invalid. Please update the steam.json and try again");
                 return;
             }
             
             if (callback.Result != EResult.OK)
             {
-                running = false;
-                await Program.Log($"Failed to log into steam. {callback.Result} {callback.ExtendedResult}");
-                return;
+                Program.LogInfo($"Failed to log into steam. {callback.Result} {callback.ExtendedResult}");
+                Environment.Exit(1);
             }
 
-            await Program.Log("Logged into steam account");
+            Program.LogInfo("Logged into steam account");
             loggedIn = true;
+
+            await QueryTimer();
         }
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
@@ -192,7 +181,7 @@ namespace ATCBot
         {
             if (!loggedIn)
             {
-                await Program.Log("Steam isn't running yet");
+                Program.LogInfo("Steam isn't running yet");
                 return;
             }
             
@@ -202,7 +191,7 @@ namespace ATCBot
             var vLobbyList = await matchmaking.GetLobbyList(Program.vtolID);
             var jLobbyList = await matchmaking.GetLobbyList(Program.jetborneID);
             
-            vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)));
+            vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
             jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)));
         }
     }
