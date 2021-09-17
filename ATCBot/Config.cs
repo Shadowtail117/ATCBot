@@ -33,9 +33,19 @@ namespace ATCBot
         public ulong vtolLobbyChannelId;
 
         /// <summary>
+        /// The Discord message ID of the last VTOL lobby information posting.
+        /// </summary>
+        public ulong vtolLastMessageId;
+
+        /// <summary>
         /// The Discord channel ID to post the Jetborne lobby information in.
         /// </summary>
         public ulong jetborneLobbyChannelId;
+
+        /// <summary>
+        /// The Discord message ID of the last Jetborne lobby information posting.
+        /// </summary>
+        public ulong jetborneLastMessageId;
 
         /// <summary>
         /// Whether or not the bot should build commands.

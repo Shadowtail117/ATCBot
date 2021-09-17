@@ -24,9 +24,6 @@ namespace ATCBot
         /// </summary>
         public const int jetborneID = 1397650;
 
-        private ulong vtolLobbyMessageId;
-        private ulong jetborneLobbyMessageId;
-
         /// <summary>
         /// The program's instance of the bot.
         /// </summary>
@@ -197,7 +194,7 @@ namespace ATCBot
             else
             {
                 EmbedBuilder vtolEmbedBuilder = new();
-                vtolEmbedBuilder.WithColor(Discord.Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
+                vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
                 if (lobbyHandler.vtolLobbies.Count > 0)
                 {
                     foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
@@ -221,14 +218,15 @@ namespace ATCBot
                     return;
                 }
 
-                if (vtolLobbyMessageId != 0 && await vtolChannel.GetMessageAsync(vtolLobbyMessageId) != null)
+                if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
                 {
-                    await vtolChannel.ModifyMessageAsync(vtolLobbyMessageId, m => m.Embed = vtolEmbedBuilder.Build());
+                    await vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbedBuilder.Build());
                 }
                 else
                 {
+                    LogInfo("Couldn't find existing VTOL message, making a new one...");
                     var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
-                    vtolLobbyMessageId = newMessage.Id;
+                    config.vtolLastMessageId = newMessage.Id;
                 }
 
             }
@@ -265,14 +263,15 @@ namespace ATCBot
                     return;
                 }
 
-                if (jetborneLobbyMessageId != 0 && await jetborneChannel.GetMessageAsync(jetborneLobbyMessageId) != null)
+                if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
                 {
-                    await jetborneChannel.ModifyMessageAsync(jetborneLobbyMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
+                    await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
                 }
                 else
                 {
+                    LogInfo("Couldn't find existing JBR message, making a new one...");
                     var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
-                    jetborneLobbyMessageId = newMessage.Id;
+                    config.jetborneLastMessageId = newMessage.Id;
                 }
             }
         }
