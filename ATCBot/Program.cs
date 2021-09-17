@@ -4,9 +4,6 @@ using ATCBot.Structs;
 using Discord;
 using Discord.WebSocket;
 
-using Steamworks;
-using Steamworks.Data;
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -81,7 +78,14 @@ namespace ATCBot
                 return;
             }
 
-            Console.WriteLine();
+            if (!SteamConfig.Load())
+            {
+                Console.WriteLine("Could not load Steam config. Aborting. Press any key to exit.");
+                Console.ReadKey();
+                return;
+
+            }
+
             new Program().MainAsync().GetAwaiter().GetResult();
         }
 
