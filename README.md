@@ -1,4 +1,4 @@
-# ATCBot v1.0.0
+# ATCBot v1.1.0
 [![.NET](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
@@ -8,10 +8,6 @@ ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetc
 ATCBot will publish lobby information using a singular message, preferably within its own channel(s) on the server. It will fetch lobby information continuously except when told to stop, and will wait a variable amount of time per second based on the configuration that it is running.
 
 Most variables of the bot are changeable using slash commands. See below.
-
-### Steamworks
-
-ATCBot uses Steamworks to fetch lobby information. Steamworks requires a logged in Steam account to be present on the machine hosting it. If there isn't, ATCBot will not work properly!
 
 ## Commands
 
@@ -52,6 +48,14 @@ In the folder is `config.cfg` and `token.txt`. `config.cfg` represents a JSON ve
 `token.txt` is where you should put the bot's token, which you should have gotten from the Discord developer portal. This is done not only so that I don't doxx my own bot but also so other people can use their own bots to host ATCBot's code. You must set `token.txt` before running the bot otherwise it will either close after realizing it has been duped, or crash because of a malformed token.
 
 Unless you are confident enough to edit `config.cfg` yourself, you should change all public configuration variables using the in-built slash commands after running the bot. The configuration will automatically save if you have not specified not to, and you exit using the `shutdown` command. Closing it via the console window will not save the config.
+
+### SteamKit
+
+ATCBot uses SteamKit to fetch lobby information. Upon setting the bot's token above, running it a second time will generate a `steam.json` in the same `Config` folder. In this, input a Steam account's username and password (2FA is not recommended). The bot will use these credentials to log into the account to fetch the lobby information.
+
+While it may seem obvious, the account must own VTOL VR and Jetborne Racing to work correctly!
+
+**Note: This configuration file is stored locally on the system and is not uploaded anywhere or used anywhere other than for the purposes of fetching lobby information. I cannot see your username or password and don't want to anyway.**
 
 ### Monitoring
 
