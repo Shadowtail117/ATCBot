@@ -40,22 +40,18 @@ namespace ATCBot.Commands
         /// <returns><inheritdoc/></returns>
         public override string Action(SocketSlashCommand command)
         {
-            if (command.User is SocketGuildUser u)
+            if (HasPerms(command.User))
             {
-                if (u.GuildPermissions.ManageGuild == true)
+                return Convert.ToInt32(command.Data.Options.First().Value) switch
                 {
-                    return Convert.ToInt32(command.Data.Options.First().Value) switch
-                    {
-                        1 => Program.config.delay.ToString(),
-                        2 => Program.shouldUpdate.ToString(),
-                        3 => Program.config.vtolLobbyChannelId.ToString(),
-                        4 => Program.config.jetborneLobbyChannelId.ToString(),
-                        _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\""),
-                    };
-                }
-                else return "Sorry, you don't have enough permissions for this!";
+                    1 => Program.config.delay.ToString(),
+                    2 => Program.shouldUpdate.ToString(),
+                    3 => Program.config.vtolLobbyChannelId.ToString(),
+                    4 => Program.config.jetborneLobbyChannelId.ToString(),
+                    _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\""),
+                };
             }
-            else throw new Exception("Could not get user permissions!");
+            else return "Sorry, you don't have the permissions to use this command!";
         }
     }
 }

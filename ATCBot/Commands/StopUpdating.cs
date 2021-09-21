@@ -27,21 +27,17 @@ namespace ATCBot.Commands
         /// <returns><inheritdoc/></returns>
         public override string Action(SocketSlashCommand command)
         {
-            if (command.User is SocketGuildUser u)
+            if (HasPerms(command.User))
             {
-                if (u.GuildPermissions.ManageGuild == true)
+                if (!Program.shouldUpdate)
+                    return "Already not updating!";
+                else
                 {
-                    if (!Program.shouldUpdate)
-                        return "Already not updating!";
-                    else
-                    {
-                        Program.shouldUpdate = false;
-                        return "Stopped updating!";
-                    }
+                    Program.shouldUpdate = false;
+                    return "Stopped updating!";
                 }
-                else return "Sorry, you don't have enough permissions for this!";
             }
-            else throw new System.Exception("Could not get user permissions!");
+            else return "Sorry, you don't have the permissions to use this command!";
         }
     }
 }

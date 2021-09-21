@@ -15,10 +15,20 @@ namespace ATCBot.Commands
         /// </summary>
         public static List<Command> AllCommands { get; set; } = new();
 
+        internal static bool HasPerms(SocketGuildUser u) => u.GuildPermissions.ManageGuild;
+        internal static bool HasPerms(SocketUser u)
+        {
+            if (u is SocketGuildUser g)
+            {
+                return HasPerms(g);
+            }
+            else return false;
+        }
+
         /// <summary>
         /// The name of the command.
         /// </summary>
-        /// <remarks>MUST match <cref>Builder.Name</cref>.</remarks>
+        /// <remarks>MUST match the builder's name.</remarks>
         public abstract string Name { get; set; }
 
         /// <summary>

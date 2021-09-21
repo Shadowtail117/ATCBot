@@ -52,6 +52,11 @@ namespace ATCBot
         /// </summary>
         public static bool shouldShutdown = false;
 
+        /// <summary>
+        /// Whether or not we should refresh the messages.
+        /// </summary>
+        public static bool shouldRefresh = false;
+
         static void Main(string[] args)
         {
             //Stuff to set up the console
@@ -218,6 +223,12 @@ namespace ATCBot
                     return;
                 }
 
+                if(shouldRefresh)
+                {
+                    await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                    LogInfo("Deleted VTOL message!");
+                }
+
                 if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
                 {
                     await vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbedBuilder.Build());
@@ -263,6 +274,12 @@ namespace ATCBot
                     return;
                 }
 
+                if (shouldRefresh)
+                {
+                    await jetborneChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                    LogInfo("Deleted JBR message!");
+                }
+
                 if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
                 {
                     await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
@@ -273,6 +290,8 @@ namespace ATCBot
                     var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
                     config.jetborneLastMessageId = newMessage.Id;
                 }
+
+                shouldRefresh = false;
             }
         }
 
