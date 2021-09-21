@@ -294,10 +294,12 @@ namespace ATCBot
             {
                 Console.WriteLine("Saving config!");
                 config.Save(false);
-                Console.WriteLine("Goodbye!");
             }
             else
-                Console.WriteLine("Not saving config! Goodbye!");
+                Console.WriteLine("Not saving config!");
+
+            Console.WriteLine("Press any key to exit. Goodbye!");
+            Console.ReadKey();
         }
     }
 }

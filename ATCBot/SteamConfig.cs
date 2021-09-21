@@ -56,13 +56,19 @@ namespace ATCBot
         {
             if (!Directory.Exists(saveDirectory) || !File.Exists(saveFile))
             {
-                Program.LogInfo($"steam.json doesn't exist. Creating one! " +
-                            $"Please add your steam details int steam.json");
+                Program.LogInfo($"steam.json does not exist, creating one! Please add in your Steam credentials.");
                 Save(new SteamConfig());
                 return false;
             }
 
-            Config = JsonConvert.DeserializeObject<SteamConfig>(File.ReadAllText(saveFile));
+            try
+            {
+                Config = JsonConvert.DeserializeObject<SteamConfig>(File.ReadAllText(saveFile));
+            }
+            catch(JsonReaderException e)
+            {
+                Program.LogError("Could not read steam.json! Check that the file isn't corrupted.", e);
+            }
 
             if (Config.SteamUserName == null || Config.SteamPassword == null)
             {
