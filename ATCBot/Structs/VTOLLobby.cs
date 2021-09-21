@@ -41,7 +41,7 @@ namespace ATCBot.Structs
             {
                 _ = lobby.Metadata["name"];
                 //If we get this far, this means this IS an MP mod lobby
-                Program.LogVerbose("Skipping over modded lobby...");
+                Program.LogVerbose("Skipping over modded lobby...", "VTOL Lobby Constructor");
                 this = Empty;
                 return;
             }
@@ -59,7 +59,7 @@ namespace ATCBot.Structs
             }
             catch (KeyNotFoundException e) //If we catch this, this means there is an actual issue
             {
-                Program.LogError("Could not parse lobby metadata!", e);
+                Program.LogError("Could not parse lobby metadata!", e, "VTOL Lobby Constructor");
                 this = Empty;
             }
         }

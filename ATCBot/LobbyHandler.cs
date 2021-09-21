@@ -23,6 +23,9 @@ namespace ATCBot
 
         private bool loggedIn;
 
+        /// <summary />
+        public static bool triedLoggingIn; //Whether or not we have even tried logging into Steam yet.
+
         private SteamClient client;
         private CallbackManager manager;
         private SteamUser user;
@@ -32,12 +35,12 @@ namespace ATCBot
         {
             if (Program.shouldUpdate)
             {
-                Program.LogVerbose("Updating lobbies...", "Lobby Handler");
+                if(triedLoggingIn) Program.LogVerbose("Updating lobbies...", "Lobby Handler");
                 manager.RunWaitCallbacks(steamTimeout);
                 await GetLobbies();
                 await program.UpdateLobbyInformation();
             }
-            else Program.LogVerbose("Skipping update...", "Lobby Handler");
+            else if (triedLoggingIn) Program.LogVerbose("Skipping update...", "Lobby Handler");
             await Task.Delay(delay);
             await QueryTimer();
         }
@@ -97,10 +100,12 @@ namespace ATCBot
             Program.LogInfo("Disconnected from Steam!");
         }
 
-        private async void OnLoggedOn(SteamUser.LoggedOnCallback callback)
+        private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
             bool hasSteamGuard = callback.Result == EResult.AccountLogonDenied;
             bool hasF2A = callback.Result == EResult.AccountLoginDeniedNeedTwoFactor;
+
+            triedLoggingIn = true;
 
             if (hasSteamGuard)
             {
@@ -123,8 +128,6 @@ namespace ATCBot
 
             Program.LogInfo("Logged into Steam account!");
             loggedIn = true;
-
-            await QueryTimer();
         }
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
@@ -180,6 +183,8 @@ namespace ATCBot
 
         private async Task GetLobbies()
         {
+            if (!triedLoggingIn) return;
+
             if (!loggedIn)
             {
                 Program.LogWarning("Not logged into Steam, can't fetch lobby information!");
@@ -193,7 +198,7 @@ namespace ATCBot
             var jLobbyList = await matchmaking.GetLobbyList(Program.jetborneID);
 
             vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
-            jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)));
+            jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(JetborneLobby.Empty)));
         }
     }
 }
