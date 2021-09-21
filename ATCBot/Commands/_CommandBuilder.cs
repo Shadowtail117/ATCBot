@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Linq;
-using System;
-
-using Discord;
+﻿using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace ATCBot.Commands
 {
@@ -27,10 +27,10 @@ namespace ATCBot.Commands
         {
             //Get all commands (all classes that inherit from Command)
             var commands = Assembly.GetAssembly(typeof(Command)).GetTypes().Where(t => t.IsSubclassOf(typeof(Command)));
-            foreach(var c in commands)
+            foreach (var c in commands)
             {
                 var command = (Command)Activator.CreateInstance(c);
-                
+
                 Command.AllCommands.Add(command);
             }
 

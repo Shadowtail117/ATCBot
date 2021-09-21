@@ -1,12 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace ATCBot.Commands
 {
     /// <summary>
@@ -33,8 +27,12 @@ namespace ATCBot.Commands
         /// <returns><inheritdoc/></returns>
         public override string Action(SocketSlashCommand command)
         {
-            Program.shouldShutdown = true;
-            return "Shutting down! o7";
+            if (HasPerms(command.User))
+            {
+                Program.shouldShutdown = true;
+                return "Shutting down! o7";
+            }
+            else return "Sorry, you don't have the permissions to use this command!";
         }
     }
 }

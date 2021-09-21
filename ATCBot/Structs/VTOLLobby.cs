@@ -1,4 +1,5 @@
 using SteamKit2;
+
 using System.Collections.Generic;
 
 namespace ATCBot.Structs
@@ -46,7 +47,7 @@ namespace ATCBot.Structs
             }
             catch (KeyNotFoundException) //If we catch an error, this means this is NOT an MP mod lobby
             {
-                
+
             }
 
             try

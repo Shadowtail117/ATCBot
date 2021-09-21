@@ -1,13 +1,13 @@
 ﻿using ATCBot.Structs;
 
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
+using SteamKit2;
+
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using SteamKit2;
+using System.Threading.Tasks;
 
 namespace ATCBot
 {
@@ -20,9 +20,9 @@ namespace ATCBot
         public List<JetborneLobby> jetborneLobbies = new();
 
         public Program program;
-        
+
         private bool loggedIn;
-        
+
         private SteamClient client;
         private CallbackManager manager;
         private SteamUser user;
@@ -30,24 +30,24 @@ namespace ATCBot
 
         public async Task QueryTimer()
         {
-            if(Program.shouldUpdate)
+            if (Program.shouldUpdate)
             {
-                Program.LogVerbose("Updating...", "Lobby Handler");
+                Program.LogVerbose("Updating lobbies...", "Lobby Handler");
                 manager.RunWaitCallbacks(steamTimeout);
                 await GetLobbies();
                 await program.UpdateLobbyInformation();
             }
-            else Program.LogVerbose("Skipping Update...", "Lobby Handler");
+            else Program.LogVerbose("Skipping update...", "Lobby Handler");
             await Task.Delay(delay);
             await QueryTimer();
         }
-        
+
         public LobbyHandler(Program program)
         {
             this.program = program;
             SetupSteam();
         }
-        
+
         private void SetupSteam()
         {
             client = new SteamClient();
@@ -57,7 +57,7 @@ namespace ATCBot
 
             SetupCallbacks();
 
-            Program.LogInfo("Connecting to steam");
+            Program.LogInfo("Connecting to Steam!");
             client.Connect();
         }
 
@@ -69,19 +69,19 @@ namespace ATCBot
             manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
             manager.Subscribe<SteamUser.UpdateMachineAuthCallback>(OnMachineAuth);
         }
-        
+
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            Program.LogInfo($"Connected to steam. Logging into {SteamConfig.Config.SteamUserName}");
+            Program.LogInfo($"Connected to Steam. Logging into {SteamConfig.Config.SteamUserName}.");
 
             byte[] sentryHash = null;
             string sentryPath = Path.Combine(Directory.GetCurrentDirectory(), "sentry.bin");
             if (File.Exists(sentryPath))
             {
-                byte[] sentryFile = File.ReadAllBytes( "sentry.bin" );
-                sentryHash = CryptoHelper.SHAHash( sentryFile );
+                byte[] sentryFile = File.ReadAllBytes("sentry.bin");
+                sentryHash = CryptoHelper.SHAHash(sentryFile);
             }
-            
+
             user.LogOn(new SteamUser.LogOnDetails()
             {
                 Username = SteamConfig.Config.SteamUserName,
@@ -91,12 +91,12 @@ namespace ATCBot
                 SentryFileHash = sentryHash
             });
         }
-        
+
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Program.LogInfo("Disconnected from Steam");
+            Program.LogInfo("Disconnected from Steam!");
         }
-        
+
         private async void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
             bool hasSteamGuard = callback.Result == EResult.AccountLogonDenied;
@@ -104,23 +104,24 @@ namespace ATCBot
 
             if (hasSteamGuard)
             {
-                Program.LogInfo($"Emailed Auth Code was invalid. Please update the steam.json and try again");
+                Program.LogWarning($"Looks like Steam does not trust this machine yet. " +
+                    $"You have been emailed an auth code, please input that into steam.json and re-run the program.");
                 return;
             }
-            
+
             if (hasF2A)
             {
-                Program.LogInfo("F2A code was invalid. Please update the steam.json and try again");
+                Program.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.");
                 return;
             }
-            
+
             if (callback.Result != EResult.OK)
             {
-                Program.LogInfo($"Failed to log into steam. {callback.Result} {callback.ExtendedResult}");
+                Program.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}");
                 Environment.Exit(1);
             }
 
-            Program.LogInfo("Logged into steam account");
+            Program.LogInfo("Logged into Steam account!");
             loggedIn = true;
 
             await QueryTimer();
@@ -130,10 +131,10 @@ namespace ATCBot
         {
             loggedIn = false;
         }
-        
+
         private void OnMachineAuth(SteamUser.UpdateMachineAuthCallback callback)
         {
-            Console.WriteLine("Updating sentryfile...");
+            Program.LogInfo("Updating sentryfile...");
 
             // write out our sentry file
             // ideally we'd want to write to the filename specified in the callback
@@ -142,21 +143,21 @@ namespace ATCBot
 
             int fileSize;
             byte[] sentryHash;
-            using ( var fs = File.Open( "sentry.bin", FileMode.OpenOrCreate, FileAccess.ReadWrite ) )
+            using (var fs = File.Open("sentry.bin", FileMode.OpenOrCreate, FileAccess.ReadWrite))
             {
                 fs.Seek(callback.Offset, SeekOrigin.Begin);
                 fs.Write(callback.Data, 0, callback.BytesToWrite);
-                fileSize = ( int )fs.Length;
+                fileSize = (int)fs.Length;
 
                 fs.Seek(0, SeekOrigin.Begin);
-                using ( var sha = SHA1.Create() )
+                using (var sha = SHA1.Create())
                 {
-                    sentryHash = sha.ComputeHash( fs );
+                    sentryHash = sha.ComputeHash(fs);
                 }
             }
 
             // inform the steam servers that we're accepting this sentry file
-            user.SendMachineAuthResponse( new SteamUser.MachineAuthDetails
+            user.SendMachineAuthResponse(new SteamUser.MachineAuthDetails
             {
                 JobID = callback.JobID,
 
@@ -172,25 +173,25 @@ namespace ATCBot
                 OneTimePassword = callback.OneTimePassword,
 
                 SentryFileHash = sentryHash,
-            } );
+            });
 
-            Console.WriteLine("Done!");
+            Program.LogInfo("Done! You shouldn't need to re-authorize this computer again (unless you have Steam Guard enabled)!");
         }
 
         private async Task GetLobbies()
         {
             if (!loggedIn)
             {
-                Program.LogInfo("Steam isn't running yet");
+                Program.LogWarning("Not logged into Steam, can't fetch lobby information!");
                 return;
             }
-            
+
             vtolLobbies.Clear();
             jetborneLobbies.Clear();
-            
+
             var vLobbyList = await matchmaking.GetLobbyList(Program.vtolID);
             var jLobbyList = await matchmaking.GetLobbyList(Program.jetborneID);
-            
+
             vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
             jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)));
         }

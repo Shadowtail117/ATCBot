@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
+﻿using Discord.WebSocket;
 
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
+using System;
+using System.Threading.Tasks;
 
 namespace ATCBot.Commands
 {
@@ -36,7 +32,7 @@ namespace ATCBot.Commands
                 await command.RespondAsync(c.Action(command));
             }
             else throw new Exception("Impossible client interaction!");
-            if(Program.shouldShutdown)
+            if (Program.shouldShutdown)
             {
                 Environment.Exit(0);
             }

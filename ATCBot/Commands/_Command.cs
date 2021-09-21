@@ -1,7 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
 
-using System;
 using System.Collections.Generic;
 
 namespace ATCBot.Commands
@@ -16,17 +15,27 @@ namespace ATCBot.Commands
         /// </summary>
         public static List<Command> AllCommands { get; set; } = new();
 
+        internal static bool HasPerms(SocketGuildUser u) => u.GuildPermissions.ManageGuild;
+        internal static bool HasPerms(SocketUser u)
+        {
+            if (u is SocketGuildUser g)
+            {
+                return HasPerms(g);
+            }
+            else return false;
+        }
+
         /// <summary>
         /// The name of the command.
         /// </summary>
-        /// <remarks>MUST match <cref>Builder.Name</cref>.</remarks>
+        /// <remarks>MUST match the builder's name.</remarks>
         public abstract string Name { get; set; }
 
         /// <summary>
         /// The slash command builder used to create the command. Must be initialized at declaration.
         /// </summary>
         public abstract SlashCommandBuilder Builder { get; set; }
-        
+
         /// <summary>
         /// The action to take when this command is invoked.
         /// </summary>

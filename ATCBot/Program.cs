@@ -5,11 +5,7 @@ using Discord;
 using Discord.WebSocket;
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using System.IO;
-using System.Net;
 
 namespace ATCBot
 {
@@ -28,9 +24,6 @@ namespace ATCBot
         /// </summary>
         public const int jetborneID = 1397650;
 
-        private ulong vtolLobbyMessageId;
-        private ulong jetborneLobbyMessageId;
-
         /// <summary>
         /// The program's instance of the bot.
         /// </summary>
@@ -43,7 +36,7 @@ namespace ATCBot
         private LobbyHandler lobbyHandler;
 
         private static bool forceDontSaveConfig = false;
-        
+
         /// <summary>
         /// Whether or not we should be updating the lobby information.
         /// </summary>
@@ -58,6 +51,11 @@ namespace ATCBot
         /// Whether or not we should immediately shutdown.
         /// </summary>
         public static bool shouldShutdown = false;
+
+        /// <summary>
+        /// Whether or not we should refresh the messages.
+        /// </summary>
+        public static bool shouldRefresh = false;
 
         static void Main(string[] args)
         {
@@ -201,7 +199,7 @@ namespace ATCBot
             else
             {
                 EmbedBuilder vtolEmbedBuilder = new();
-                vtolEmbedBuilder.WithColor(Discord.Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
+                vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
                 if (lobbyHandler.vtolLobbies.Count > 0)
                 {
                     foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
@@ -219,22 +217,29 @@ namespace ATCBot
 
                 var vtolChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.vtolLobbyChannelId);
 
-                if(vtolChannel == null)
+                if (vtolChannel == null)
                 {
                     LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder");
                     return;
                 }
 
-                if(vtolLobbyMessageId != 0 && await vtolChannel.GetMessageAsync(vtolLobbyMessageId) != null)
+                if(shouldRefresh)
                 {
-                    await vtolChannel.ModifyMessageAsync(vtolLobbyMessageId, m => m.Embed = vtolEmbedBuilder.Build());
+                    await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                    LogInfo("Deleted VTOL message!");
+                }
+
+                if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
+                {
+                    await vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbedBuilder.Build());
                 }
                 else
                 {
+                    LogInfo("Couldn't find existing VTOL message, making a new one...");
                     var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
-                    vtolLobbyMessageId = newMessage.Id;
+                    config.vtolLastMessageId = newMessage.Id;
                 }
-                
+
             }
 
             //JBR lobbies
@@ -269,15 +274,24 @@ namespace ATCBot
                     return;
                 }
 
-                if (jetborneLobbyMessageId != 0 && await jetborneChannel.GetMessageAsync(jetborneLobbyMessageId) != null)
+                if (shouldRefresh)
                 {
-                    await jetborneChannel.ModifyMessageAsync(jetborneLobbyMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
+                    await jetborneChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                    LogInfo("Deleted JBR message!");
+                }
+
+                if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
+                {
+                    await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
                 }
                 else
                 {
+                    LogInfo("Couldn't find existing JBR message, making a new one...");
                     var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
-                    jetborneLobbyMessageId = newMessage.Id;
+                    config.jetborneLastMessageId = newMessage.Id;
                 }
+
+                shouldRefresh = false;
             }
         }
 
@@ -290,7 +304,7 @@ namespace ATCBot
             client.InteractionCreated += commandHandler.ClientInteractionCreated;
             await commandBuilder.BuildCommands();
         }
-        
+
         static void OnExit(object sender, EventArgs e)
         {
             if (forceDontSaveConfig) return;
@@ -299,10 +313,12 @@ namespace ATCBot
             {
                 Console.WriteLine("Saving config!");
                 config.Save(false);
-                Console.WriteLine("Goodbye!");
             }
             else
-                Console.WriteLine("Not saving config! Goodbye!");
+                Console.WriteLine("Not saving config!");
+
+            Console.WriteLine("Press any key to exit. Goodbye!");
+            Console.ReadKey();
         }
     }
 }
