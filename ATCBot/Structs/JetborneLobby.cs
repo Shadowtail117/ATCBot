@@ -1,4 +1,3 @@
-using System;
 using SteamKit2;
 
 namespace ATCBot.Structs

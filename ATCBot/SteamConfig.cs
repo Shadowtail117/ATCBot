@@ -1,6 +1,7 @@
+using Newtonsoft.Json;
+
 using System;
 using System.IO;
-using Newtonsoft.Json;
 
 namespace ATCBot
 {
@@ -13,27 +14,27 @@ namespace ATCBot
         /// A global steam config to use for this instance of the bot.
         /// </summary>
         public static SteamConfig Config;
-        
+
         /// <summary>
         /// The username of the steam account which will be logged into.
         /// </summary>
         public string SteamUserName;
-        
+
         /// <summary>
         /// The password for the steam account which will be logged into.
         /// </summary>
         public string SteamPassword;
-        
+
         /// <summary>
         /// The two factor authentication code to be used if the steam account has 2FA enabled.
         /// </summary>
         public string TwoFactorAuthCode;
-        
+
         /// <summary>
         /// The steam guard code to be used if the steam account has it enabled.
         /// </summary>
         public string AuthCode;
-        
+
         private static readonly string directory = Directory.GetCurrentDirectory();
         private static readonly string saveDirectory = Path.Combine(directory, @"Config");
         private static readonly string saveFile = Path.Combine(saveDirectory, @"steam.json");
@@ -42,11 +43,11 @@ namespace ATCBot
         {
             if (!Directory.Exists(saveDirectory))
                 Directory.CreateDirectory(saveDirectory);
-            
+
             File.WriteAllText(saveFile, JsonConvert.SerializeObject(config, Formatting.Indented));
             Console.WriteLine($"Saved config to {saveFile}");
         }
-        
+
         /// <summary>
         /// Loads the config from <see cref="saveFile"/>.
         /// </summary>
@@ -55,20 +56,26 @@ namespace ATCBot
         {
             if (!Directory.Exists(saveDirectory) || !File.Exists(saveFile))
             {
-                Program.LogInfo($"steam.json doesn't exist. Creating one! " +
-                            $"Please add your steam details int steam.json");
+                Program.LogInfo($"steam.json does not exist, creating one! Please add in your Steam credentials.");
                 Save(new SteamConfig());
                 return false;
             }
-            
-            Config = JsonConvert.DeserializeObject<SteamConfig>(File.ReadAllText(saveFile));
+
+            try
+            {
+                Config = JsonConvert.DeserializeObject<SteamConfig>(File.ReadAllText(saveFile));
+            }
+            catch(JsonReaderException e)
+            {
+                Program.LogError("Could not read steam.json! Check that the file isn't corrupted.", e);
+            }
 
             if (Config.SteamUserName == null || Config.SteamPassword == null)
             {
                 Console.WriteLine($"{saveFile} has no steam login details. Please put your login details in there.");
                 return false;
             }
-            
+
             return true;
         }
     }

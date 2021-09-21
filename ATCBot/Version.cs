@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
-using System.Net.Http;
-using System.IO;
-using System.Net;
 
 namespace ATCBot
 {
@@ -17,7 +11,7 @@ namespace ATCBot
         /// <summary>
         /// The local version of the bot.
         /// </summary>
-        public static string LocalVersion { get; } = "1.1.0p";
+        public static string LocalVersion { get; } = "1.1.0";
 
         /// <summary>
         /// The remote version on the repository.
@@ -44,6 +38,6 @@ namespace ATCBot
                 RemoteVersion = "ERR";
             }
             return LocalVersion == RemoteVersion;
-        } 
+        }
     }
 }
