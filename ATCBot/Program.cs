@@ -191,6 +191,8 @@ namespace ATCBot
         /// </summary>
         public async Task UpdateLobbyInformation()
         {
+            if (!LobbyHandler.triedLoggingIn) return;
+
             //VTOL lobbies
             if (config.vtolLobbyChannelId == 0)
             {
@@ -250,7 +252,7 @@ namespace ATCBot
             else
             {
                 EmbedBuilder jetborneEmbedBuilder = new();
-                jetborneEmbedBuilder.WithColor(Discord.Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
+                jetborneEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
                 if (lobbyHandler.jetborneLobbies.Count > 0)
                 {
                     foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
@@ -260,7 +262,7 @@ namespace ATCBot
                             LogWarning("Invalid lobby state!", "JBR Embed Builder");
                             continue;
                         }
-                        string content = $"{lobby.MemberCount} Players\nLap {lobby.CurrentLap}/{lobby.RaceLaps}";
+                        string content = $"{lobby.MemberCount} Players\nLap" + lobby.CurrentLap == string.Empty ? "Currently In Lobby" : $"Lap {lobby.CurrentLap}/{lobby.RaceLaps}";
                         jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
                     }
                 }
@@ -276,7 +278,7 @@ namespace ATCBot
 
                 if (shouldRefresh)
                 {
-                    await jetborneChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                    await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
                     LogInfo("Deleted JBR message!");
                 }
 

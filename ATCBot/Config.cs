@@ -79,7 +79,7 @@ namespace ATCBot
             if (!Directory.Exists(saveDirectory))
                 Directory.CreateDirectory(saveDirectory);
             File.WriteAllText(saveFile, JsonConvert.SerializeObject(this));
-            if (!silent) Console.WriteLine($"finished saving configuration to \"{saveDirectory}\".");
+            if (!silent) Console.WriteLine($"Finished saving configuration to \"{saveDirectory}\".");
         }
 
         /// <summary>

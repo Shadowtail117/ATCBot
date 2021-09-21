@@ -26,8 +26,9 @@ namespace ATCBot.Commands
                     argsAsText = argsAsText[0..^2];
                 }
 
-                Program.LogInfo($"Received slash command \"{command.Data.Name}\"" +
-                    argsAsText == "" ? "" : $" with arguments \"{argsAsText}\"", $"{command.User.Username} in {command.Channel.Name}");
+                string logMessage = $"Received slash command \"{command.Data.Name}\"{(argsAsText == "" ? "" : $" with parameters \"{argsAsText}\"")}.";
+                string logSource = $"{command.User.Username} in {command.Channel.Name}";
+                Program.Log(new Discord.LogMessage(Discord.LogSeverity.Info, logSource, logMessage));
                 Command c = Command.AllCommands.Find(c => c.Name.Equals(command.Data.Name));
                 await command.RespondAsync(c.Action(command));
             }

@@ -1,4 +1,5 @@
 using SteamKit2;
+using System.Collections.Generic;
 
 namespace ATCBot.Structs
 {
@@ -7,6 +8,11 @@ namespace ATCBot.Structs
     /// </summary>
     public struct JetborneLobby
     {
+        /// <summary>
+        /// An empty lobby.
+        /// </summary>
+        public static readonly JetborneLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", RaceLaps = "", CurrentLap = "", Map = "" };
+
         /// <summary>
         /// The name of the lobby.
         /// </summary>
@@ -40,19 +46,27 @@ namespace ATCBot.Structs
         /// <summary />
         public JetborneLobby(SteamMatchmaking.Lobby lobby)
         {
-            LobbyName = lobby.Metadata["name"];
-            OwnerName = lobby.Metadata["ownername"];
-            RaceLaps = lobby.Metadata["raceLaps"];
-            Map = lobby.Metadata["map"];
-            if (lobby.Metadata.TryGetValue("currentLap", out string value))
+            try
             {
-                CurrentLap = value;
+                LobbyName = lobby.Metadata["name"];
+                OwnerName = lobby.Metadata["ownerName"];
+                RaceLaps = lobby.Metadata["raceLaps"];
+                Map = lobby.Metadata["map"];
+                if (lobby.Metadata.TryGetValue("currentLap", out string value))
+                {
+                    CurrentLap = value;
+                }
+                else
+                {
+                    CurrentLap = string.Empty;
+                }
+                MemberCount = lobby.NumMembers;
             }
-            else
+            catch(KeyNotFoundException e)
             {
-                CurrentLap = string.Empty;
+                Program.LogError("Could not parse lobby metadata!", e, "JBR Lobby Constructor");
+                this = Empty;
             }
-            MemberCount = lobby.NumMembers;
         }
     }
 }
