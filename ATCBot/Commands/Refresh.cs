@@ -10,7 +10,7 @@ namespace ATCBot.Commands
         public override string Name { get; set; } = "refresh";
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
             .WithName("refresh")
-            .WithDescription("Force the bot to delete its previous messages if possible and make new ones. Requires Manage Server permissions.");
+            .WithDescription("Force the bot to delete previous messages. Requires Manage Server permissions.");
 
         public override string Action(SocketSlashCommand command)
         {
