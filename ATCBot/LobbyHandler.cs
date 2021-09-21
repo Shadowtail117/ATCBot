@@ -198,7 +198,7 @@ namespace ATCBot
             var jLobbyList = await matchmaking.GetLobbyList(Program.jetborneID);
 
             vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
-            jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)));
+            jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(JetborneLobby.Empty)));
         }
     }
 }
