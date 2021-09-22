@@ -19,8 +19,9 @@ namespace ATCBot.Commands
             .AddChoice("delay", 1)
             .AddChoice("vtollobbyid", 2)
             .AddChoice("jetbornelobbyid", 3)
-            .AddChoice("resetcommands", 4)
-            .AddChoice("saveconfig", 5)
+            .AddChoice("systemmessageid", 4)
+            .AddChoice("resetcommands", 5)
+            .AddChoice("saveconfig", 6)
             .WithType(ApplicationCommandOptionType.Integer)
         ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
 
@@ -43,7 +44,7 @@ namespace ATCBot.Commands
                         }
                         else
                         {
-                            return $"Sorry, I couldn't translate your input into an integer.";
+                            return "Sorry, I couldn't translate your input into an integer.";
                         }
 
                     case 2:
@@ -55,7 +56,7 @@ namespace ATCBot.Commands
                         }
                         else
                         {
-                            return $"Sorry, I couldn't translate your input to an integer.";
+                            return "Sorry, I couldn't translate your input to an integer.";
                         }
 
                     case 3:
@@ -67,10 +68,22 @@ namespace ATCBot.Commands
                         }
                         else
                         {
-                            return $"Sorry, I couldn't translate your input to an integer.";
+                            return "Sorry, I couldn't translate your input to an integer.";
                         }
 
                     case 4:
+                        successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
+                        if (successful)
+                        {
+                            Program.config.systemMessageChannelId = value;
+                            return $"Successfully set system message channel ID to {value}!";
+                        }
+                        else
+                        {
+                            return "Sorry, I couldn't translate your input to an integer.";
+                        }
+
+                    case 5:
                         successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
                         if (successful)
                         {
@@ -85,9 +98,9 @@ namespace ATCBot.Commands
                                 return "Will not rebuild commands on next restart!";
                             }
                         }
-                        else return $"Sorry, I couldn't translate your input to a true/false boolean.";
+                        else return "Sorry, I couldn't translate your input to a true/false boolean.";
 
-                    case 5:
+                    case 6:
                         successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
                         if (successful)
                         {
@@ -102,7 +115,7 @@ namespace ATCBot.Commands
                                 return "Will not save config on shutting down!";
                             }
                         }
-                        else return $"Sorry, I couldn't translate your input to a true/false boolean.";
+                        else return "Sorry, I couldn't translate your input to a true/false boolean.";
                     default: throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"");
                 }
             }

@@ -48,6 +48,11 @@ namespace ATCBot
         public ulong jetborneLastMessageId;
 
         /// <summary>
+        /// The Discord channel ID to send system messages to.
+        /// </summary>
+        public ulong systemMessageChannelId;
+
+        /// <summary>
         /// Whether or not the bot should build commands.
         /// </summary>
         /// <remarks>Will automatically set itself to false after building, edit the config directly to re-enable.</remarks>

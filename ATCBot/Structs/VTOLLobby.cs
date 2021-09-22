@@ -12,7 +12,7 @@ namespace ATCBot.Structs
         /// <summary>
         /// An empty lobby.
         /// </summary>
-        public static readonly VTOLLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", ScenarioText = "", passwordProtected = false };
+        public static readonly VTOLLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", ScenarioText = "", PasswordProtected = false };
 
         /// <summary>
         /// The name of the lobby.
@@ -37,7 +37,7 @@ namespace ATCBot.Structs
         /// <summary>
         /// Whether or not the lobby is password protected.
         /// </summary>
-        public bool passwordProtected;
+        public bool PasswordProtected;
 
         /// <summary />
         public VTOLLobby(SteamMatchmaking.Lobby lobby)
@@ -61,7 +61,7 @@ namespace ATCBot.Structs
                 OwnerName = lobby.Metadata["oName"];
                 ScenarioText = lobby.Metadata["scn"];
                 MemberCount = lobby.NumMembers;
-                passwordProtected = !lobby.Metadata["pwh"].Equals("0"); //0 = public
+                PasswordProtected = !lobby.Metadata["pwh"].Equals("0"); //0 = public
             }
             catch (KeyNotFoundException e) //If we catch this, this means there is an actual issue
             {

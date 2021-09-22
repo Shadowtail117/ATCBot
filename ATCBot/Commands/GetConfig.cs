@@ -30,6 +30,7 @@ namespace ATCBot.Commands
             .AddChoice("updating", 2)
             .AddChoice("vtolchannelid", 3)
             .AddChoice("jetbornechannelid", 4)
+            .AddChoice("systemmessageid", 5)
             .WithType(ApplicationCommandOptionType.Integer)
         );
 
@@ -48,6 +49,7 @@ namespace ATCBot.Commands
                     2 => Program.shouldUpdate.ToString(),
                     3 => Program.config.vtolLobbyChannelId.ToString(),
                     4 => Program.config.jetborneLobbyChannelId.ToString(),
+                    5 => Program.config.systemMessageChannelId.ToString(),
                     _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\""),
                 };
             }
