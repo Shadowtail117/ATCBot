@@ -28,6 +28,11 @@ namespace ATCBot
         public bool shouldSave = true;
 
         /// <summary>
+        /// The user ID of the owner of the bot. Required for some commands. Must be set manually in the .cfg.
+        /// </summary>
+        public ulong botOwnerId;
+
+        /// <summary>
         /// The Discord channel ID to post the VTOL lobby information in.
         /// </summary>
         public ulong vtolLobbyChannelId;
@@ -83,7 +88,7 @@ namespace ATCBot
             if (!silent) Console.WriteLine($"Saving configuration to \"{saveDirectory}\".");
             if (!Directory.Exists(saveDirectory))
                 Directory.CreateDirectory(saveDirectory);
-            File.WriteAllText(saveFile, JsonConvert.SerializeObject(this));
+            File.WriteAllText(saveFile, JsonConvert.SerializeObject(this, Formatting.Indented));
             if (!silent) Console.WriteLine($"Finished saving configuration to \"{saveDirectory}\".");
         }
 

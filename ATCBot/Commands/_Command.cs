@@ -25,6 +25,16 @@ namespace ATCBot.Commands
             else return false;
         }
 
+        internal static bool IsOwner(SocketGuildUser u) => u.Id == Config.config.botOwnerId; //Shadow's ID
+        internal static bool IsOwner(SocketUser u)
+        {
+            if (u is SocketGuildUser g)
+            {
+                return HasPerms(g);
+            }
+            else return false;
+        }
+
         /// <summary>
         /// The name of the command.
         /// </summary>

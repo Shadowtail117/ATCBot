@@ -20,8 +20,7 @@ namespace ATCBot.Commands
             .AddChoice("vtollobbyid", 2)
             .AddChoice("jetbornelobbyid", 3)
             .AddChoice("systemmessageid", 4)
-            .AddChoice("resetcommands", 5)
-            .AddChoice("saveconfig", 6)
+            .AddChoice("saveconfig", 5)
             .WithType(ApplicationCommandOptionType.Integer)
         ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
 
@@ -89,23 +88,6 @@ namespace ATCBot.Commands
                         {
                             if (boolValue)
                             {
-                                Program.config.shouldBuildCommands = true;
-                                return "Will rebuild commands on next restart!";
-                            }
-                            else
-                            {
-                                Program.config.shouldBuildCommands = false;
-                                return "Will not rebuild commands on next restart!";
-                            }
-                        }
-                        else return "Sorry, I couldn't translate your input to a true/false boolean.";
-
-                    case 6:
-                        successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
-                        if (successful)
-                        {
-                            if (boolValue)
-                            {
                                 Program.config.shouldSave = true;
                                 return "Will save config on shutting down!";
                             }
@@ -116,6 +98,7 @@ namespace ATCBot.Commands
                             }
                         }
                         else return "Sorry, I couldn't translate your input to a true/false boolean.";
+
                     default: throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"");
                 }
             }
