@@ -211,7 +211,7 @@ namespace ATCBot
                             LogWarning("Invalid lobby state!", "VTOL Embed Builder");
                             continue;
                         }
-                        string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players";
+                        string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players\n{(lobby.passwordProtected ? "Password Protected" : "Public")}";
                         vtolEmbedBuilder.AddField(lobby.LobbyName, content);
                     }
                 }

@@ -21,10 +21,15 @@ namespace ATCBot
 
         public Program program;
 
-        private bool loggedIn;
+        /// <summary>
+        /// Whether or not the Steam client. is currently logged in.
+        /// </summary>
+        public static bool loggedIn;
 
-        /// <summary />
-        public static bool triedLoggingIn; //Whether or not we have even tried logging into Steam yet.
+        /// <summary>
+        /// Whether or not we have tried logging in to Steam yet.
+        /// </summary>
+        public static bool triedLoggingIn;
 
         private SteamClient client;
         private CallbackManager manager;
@@ -60,7 +65,7 @@ namespace ATCBot
 
             SetupCallbacks();
 
-            Program.LogInfo("Connecting to Steam!");
+            Program.LogInfo("Setting up Steam connection...");
             client.Connect();
         }
 
@@ -75,7 +80,7 @@ namespace ATCBot
 
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            Program.LogInfo($"Connected to Steam. Logging into {SteamConfig.Config.SteamUserName}.");
+            Program.LogInfo($"Connected to Steam API. Logging into {SteamConfig.Config.SteamUserName}.");
 
             byte[] sentryHash = null;
             string sentryPath = Path.Combine(Directory.GetCurrentDirectory(), "sentry.bin");
@@ -97,7 +102,7 @@ namespace ATCBot
 
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Program.LogInfo("Disconnected from Steam!");
+            Program.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!");
         }
 
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
@@ -132,6 +137,7 @@ namespace ATCBot
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
+            Program.LogWarning("Logged out of Steam!");
             loggedIn = false;
         }
 
