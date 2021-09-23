@@ -128,7 +128,12 @@ namespace ATCBot
             if (callback.Result != EResult.OK)
             {
                 Program.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}", "Lobby Handler", true);
-                Environment.Exit(1);
+                if (callback.Result.ToString().Equals("TryAnotherCM")) {
+                    Program.LogInfo("Will try to log in again, since this might not be our fault.", "Lobby Handler", true);
+                    OnConnected(default);
+                    return;
+                }
+                else Environment.Exit(1);
             }
 
             Program.LogInfo("Logged into Steam account!", "Lobby Handler", true);
