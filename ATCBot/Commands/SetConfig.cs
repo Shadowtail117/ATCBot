@@ -11,7 +11,7 @@ namespace ATCBot.Commands
         public override string Name { get; set; } = "setconfig";
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
         .WithName("setconfig")
-        .WithDescription("Set the value of a configuration option.")
+        .WithDescription("Set the value of a configuration option. Requires permission.")
         .AddOption(new SlashCommandOptionBuilder()
             .WithName("config")
             .WithDescription("The config item.")

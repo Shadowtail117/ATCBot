@@ -21,7 +21,7 @@ namespace ATCBot.Commands
         /// </summary>
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
         .WithName("getconfig")
-        .WithDescription("Get the value of a configuration option.")
+        .WithDescription("Get the value of a configuration option. Requires permission.")
         .AddOption(new SlashCommandOptionBuilder()
             .WithName("config")
             .WithDescription("The config item.")
@@ -31,7 +31,7 @@ namespace ATCBot.Commands
             .AddChoice("vtolchannelid", 3)
             .AddChoice("jetbornechannelid", 4)
             .AddChoice("systemmessageid", 5)
-            .AddChoice("roleid", 6)
+            .AddChoice("botroleid", 6)
             .WithType(ApplicationCommandOptionType.Integer)
         );
 

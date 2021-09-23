@@ -18,7 +18,7 @@ namespace ATCBot.Commands
         /// </summary>
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
             .WithName("shutdown")
-            .WithDescription("Shuts down the bot. Requires Manage Server permissions. WARNING: Requires manual restart!");
+            .WithDescription("Shuts down the bot. Requires permission. WARNING: Requires manual restart!");
 
         /// <summary>
         /// <inheritdoc/>
