@@ -200,7 +200,7 @@ namespace ATCBot
                 return;
             }
 
-            var systemChannel = (ISocketMessageChannel) await client.GetChannelAsync(config.systemMessageChannelId);
+            var systemChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.systemMessageChannelId);
 
             if (systemChannel == null)
             {
@@ -208,7 +208,14 @@ namespace ATCBot
                 return;
             }
 
-            await systemChannel.SendMessageAsync(s);
+            try
+            {
+                await systemChannel.SendMessageAsync(s);
+            }
+            catch (Discord.Net.HttpException e)
+            {
+                LogError("Couldn't send system message!", e);
+            }
         }
 
         /// <summary>
@@ -241,7 +248,7 @@ namespace ATCBot
                     }
                     if(VTOLLobby.passwordLobbies > 0)
                     {
-                        vtolEmbedBuilder.WithFooter($"+{VTOLLobby.passwordLobbies} password protected lobbies");
+                        vtolEmbedBuilder.WithFooter($"+{VTOLLobby.passwordLobbies} password protected {(VTOLLobby.passwordLobbies == 1 ? "lobby" : "lobbies")}");
                     }
                 }
                 else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
@@ -250,14 +257,22 @@ namespace ATCBot
 
                 if (vtolChannel == null)
                 {
-                    LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder");
+                    LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
                     return;
                 }
 
                 if(shouldRefresh)
                 {
-                    await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
-                    LogInfo("Deleted VTOL message!");
+                    try
+                    {
+                        await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                        LogInfo("Deleted VTOL message!");
+                    }
+                    catch (Discord.Net.HttpException e)
+                    {
+                        LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
+                        shouldUpdate = false;
+                    }
                 }
 
                 if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
@@ -266,9 +281,17 @@ namespace ATCBot
                 }
                 else
                 {
-                    LogInfo("Couldn't find existing VTOL message, making a new one...");
-                    var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
-                    config.vtolLastMessageId = newMessage.Id;
+                    try
+                    {
+                        LogInfo("Couldn't find existing VTOL message, making a new one...");
+                        var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
+                        config.vtolLastMessageId = newMessage.Id;
+                    }
+                    catch (Discord.Net.HttpException e)
+                    {
+                        LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
+                        shouldUpdate = false;
+                    }
                 }
 
             }
@@ -307,8 +330,16 @@ namespace ATCBot
 
                 if (shouldRefresh)
                 {
-                    await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
-                    LogInfo("Deleted JBR message!");
+                    try
+                    {
+                        await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
+                        LogInfo("Deleted JBR message!");
+                    }
+                    catch (Discord.Net.HttpException e)
+                    {
+                        LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
+                        shouldUpdate = false;
+                    }
                 }
 
                 if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
@@ -317,9 +348,17 @@ namespace ATCBot
                 }
                 else
                 {
-                    LogInfo("Couldn't find existing JBR message, making a new one...");
-                    var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
-                    config.jetborneLastMessageId = newMessage.Id;
+                    try
+                    {
+                        LogInfo("Couldn't find existing JBR message, making a new one...");
+                        var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
+                        config.jetborneLastMessageId = newMessage.Id;
+                    }
+                    catch (Discord.Net.HttpException e)
+                    {
+                        LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
+                        shouldUpdate = false;
+                    }
                 }
 
                 shouldRefresh = false;
