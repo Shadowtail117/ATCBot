@@ -11,7 +11,7 @@ namespace ATCBot
         /// <summary>
         /// The local version of the bot.
         /// </summary>
-        public static string LocalVersion { get; } = "1.1.2";
+        public static string LocalVersion { get; } = "1.2.0";
 
         /// <summary>
         /// The remote version on the repository.
@@ -34,7 +34,7 @@ namespace ATCBot
             }
             catch (HttpRequestException e)
             {
-                Program.LogError("Could not get remote version!", e, "Version Checker");
+                Program.LogError("Could not get remote version!", e, "Version Checker", true);
                 RemoteVersion = "ERR";
             }
             return LocalVersion == RemoteVersion;

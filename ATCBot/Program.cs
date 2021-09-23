@@ -95,12 +95,6 @@ namespace ATCBot
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
 
-            if (!await Version.CheckVersion())
-            {
-                LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
-                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
-            }
-
             lobbyHandler = new(this);
 
             await lobbyHandler.QueryTimer();
@@ -189,9 +183,8 @@ namespace ATCBot
                 LogSeverity.Debug => ConsoleColor.DarkGray,
                 _ => throw new ArgumentException("Invalid severity!")
             };
-            string s = $"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}";
-            Console.WriteLine(s);
-            if (announce) _ = SendSystemMessage(s);
+            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}");
+            if (announce) _ = SendSystemMessage($"**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}");
             Console.ResetColor();
         }
 
@@ -201,11 +194,17 @@ namespace ATCBot
         /// <param name="s">The message to send.</param>
         public static async Task SendSystemMessage(string s)
         {
-            var systemChannel = (ISocketMessageChannel) await client.GetChannelAsync(config.vtolLobbyChannelId);
+            if(config.systemMessageChannelId == 0)
+            {
+                LogInfo("Tried announcing a message but the system channel ID is not set.");
+                return;
+            }
+
+            var systemChannel = (ISocketMessageChannel) await client.GetChannelAsync(config.systemMessageChannelId);
 
             if (systemChannel == null)
             {
-                LogInfo("Tried announcing a message but the system channel ID is not set.");
+                LogInfo("Tried announcing a message but couldn't find a channel.");
                 return;
             }
 
@@ -237,8 +236,12 @@ namespace ATCBot
                             LogWarning("Invalid lobby state!", "VTOL Embed Builder");
                             continue;
                         }
-                        string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players\n{(lobby.PasswordProtected ? "Password Protected" : "Public")}";
+                        string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players";
                         vtolEmbedBuilder.AddField(lobby.LobbyName, content);
+                    }
+                    if(VTOLLobby.passwordLobbies > 0)
+                    {
+                        vtolEmbedBuilder.WithFooter($"+{VTOLLobby.passwordLobbies} password protected lobbies");
                     }
                 }
                 else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
@@ -327,6 +330,13 @@ namespace ATCBot
 
         async Task ClientReady()
         {
+            //We check the version here so that it outputs to the system channel
+            if (!await Version.CheckVersion())
+            {
+                LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
+                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
+            }
+
             commandHandler = new();
             commandBuilder = new(client);
             client.InteractionCreated += commandHandler.ClientInteractionCreated;
@@ -335,6 +345,7 @@ namespace ATCBot
 
         static void OnExit(object sender, EventArgs e)
         {
+            Program.LogInfo("Shutting down! o7", announce: true);
             if (forceDontSaveConfig) return;
             Console.WriteLine("------");
             if (config.shouldSave)

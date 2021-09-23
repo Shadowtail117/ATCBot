@@ -40,12 +40,12 @@ namespace ATCBot
         {
             if (Program.shouldUpdate)
             {
-                if(triedLoggingIn) Program.LogVerbose("Updating lobbies...", "Lobby Handler");
+                if(triedLoggingIn) Program.LogInfo("Updating lobbies...", "Lobby Handler");
                 manager.RunWaitCallbacks(steamTimeout);
                 await GetLobbies();
                 await program.UpdateLobbyInformation();
             }
-            else if (triedLoggingIn) Program.LogVerbose("Skipping update...", "Lobby Handler");
+            else if (triedLoggingIn) Program.LogInfo("Skipping update...", "Lobby Handler");
             await Task.Delay(delay);
             await QueryTimer();
         }
@@ -80,7 +80,7 @@ namespace ATCBot
 
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            Program.LogInfo($"Connected to Steam API. Logging into {SteamConfig.Config.SteamUserName}.");
+            Program.LogInfo($"Connected to Steam API. Logging into {SteamConfig.Config.SteamUserName}.", "Lobby Handler");
 
             byte[] sentryHash = null;
             string sentryPath = Path.Combine(Directory.GetCurrentDirectory(), "sentry.bin");
@@ -102,7 +102,7 @@ namespace ATCBot
 
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Program.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!");
+            Program.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!", "Lobby Handler", true);
         }
 
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
@@ -115,29 +115,29 @@ namespace ATCBot
             if (hasSteamGuard)
             {
                 Program.LogWarning($"Looks like Steam does not trust this machine yet. " +
-                    $"You have been emailed an auth code, please input that into steam.json and re-run the program.");
-                return;
+                    $"You have been emailed an auth code, please input that into steam.json and re-run the program.", "Lobby Handler", true);
+                Environment.Exit(1);
             }
 
             if (hasF2A)
             {
-                Program.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.");
-                return;
+                Program.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.", "Lobby Handler", true);
+                Environment.Exit(1);
             }
 
             if (callback.Result != EResult.OK)
             {
-                Program.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}");
+                Program.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}", "Lobby Handler", true);
                 Environment.Exit(1);
             }
 
-            Program.LogInfo("Logged into Steam account!");
+            Program.LogInfo("Logged into Steam account!", "Lobby Handler", true);
             loggedIn = true;
         }
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
-            Program.LogWarning("Logged out of Steam!");
+            Program.LogWarning("Logged out of Steam!", "Lobby Handler", true);
             loggedIn = false;
         }
 
@@ -200,11 +200,11 @@ namespace ATCBot
             vtolLobbies.Clear();
             jetborneLobbies.Clear();
 
-            var vLobbyList = await matchmaking.GetLobbyList(Program.vtolID);
-            var jLobbyList = await matchmaking.GetLobbyList(Program.jetborneID);
+            VTOLLobby.passwordLobbies = 0;
 
-            vtolLobbies.AddRange(vLobbyList.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
-            jetborneLobbies.AddRange(jLobbyList.Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(JetborneLobby.Empty)));
+
+            vtolLobbies.AddRange((await matchmaking.GetLobbyList(Program.vtolID)).Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
+            jetborneLobbies.AddRange((await matchmaking.GetLobbyList(Program.jetborneID)).Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(JetborneLobby.Empty)));
         }
     }
 }

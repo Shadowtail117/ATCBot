@@ -21,6 +21,7 @@ namespace ATCBot.Commands
             .AddChoice("jetbornelobbyid", 3)
             .AddChoice("systemmessageid", 4)
             .AddChoice("saveconfig", 5)
+            .AddChoice("botroleid", 6)
             .WithType(ApplicationCommandOptionType.Integer)
         ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
 
@@ -98,6 +99,18 @@ namespace ATCBot.Commands
                             }
                         }
                         else return "Sorry, I couldn't translate your input to a true/false boolean.";
+
+                    case 6:
+                        successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
+                        if (successful)
+                        {
+                            Program.config.botRoleId = value;
+                            return $"Successfully set bot role ID to {value}!";
+                        }
+                        else
+                        {
+                            return "Sorry, I couldn't translate your input to an integer.";
+                        }
 
                     default: throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"");
                 }

@@ -28,6 +28,11 @@ namespace ATCBot
         public bool shouldSave = true;
 
         /// <summary>
+        /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.
+        /// </summary>
+        public ulong botRoleId;
+
+        /// <summary>
         /// The user ID of the owner of the bot. Required for some commands. Must be set manually in the .cfg.
         /// </summary>
         public ulong botOwnerId;
