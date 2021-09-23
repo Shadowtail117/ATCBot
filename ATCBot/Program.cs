@@ -27,7 +27,7 @@ namespace ATCBot
         /// <summary>
         /// The program's instance of the bot.
         /// </summary>
-        public DiscordSocketClient client;
+        public static DiscordSocketClient client;
 
         private CommandBuilder commandBuilder;
 
@@ -95,12 +95,6 @@ namespace ATCBot
             await client.LoginAsync(TokenType.Bot, config.token);
             await client.StartAsync();
 
-            if (!await Version.CheckVersion())
-            {
-                LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
-                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker");
-            }
-
             lobbyHandler = new(this);
 
             await lobbyHandler.QueryTimer();
@@ -121,7 +115,8 @@ namespace ATCBot
         /// </remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        public static void LogInfo(string message, string source = "") => Log(new LogMessage(LogSeverity.Info, source, message));
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogInfo(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Info, source, message), announce);
 
         /// <summary>
         /// Logs a warning message.
@@ -129,48 +124,54 @@ namespace ATCBot
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Warning.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        public static void LogWarning(string message, string source = "") => Log(new LogMessage(LogSeverity.Warning, source, message));
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogWarning(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Warning, source, message), announce);
 
         /// <summary>
-        /// Logs an error message along with the exception.
+        /// Logs an error message along with an optional exception.
         /// </summary>
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Error.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="e">The exception to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        public static void LogError(string message, Exception e, string source = "") => Log(new LogMessage(LogSeverity.Error, source, message, e));
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogError(string message, Exception e = null, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Error, source, message, e), announce);
 
         /// <summary>
-        /// Logs a critical error message along with the exception.
+        /// Logs a critical error message along with an optional exception.
         /// </summary>
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Critical.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="e">The exception to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        public static void LogCritical(string message, Exception e, string source = "") => Log(new LogMessage(LogSeverity.Error, source, message, e));
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogCritical(string message, Exception e = null, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Error, source, message, e), announce);
 
         /// <summary>
-        /// Logs a debug message along with the exception.
+        /// Logs a debug message.
         /// </summary>
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Debug.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        public static void LogDebug(string message, string source = "") => Log(new LogMessage(LogSeverity.Debug, source, message));
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogDebug(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Debug, source, message), announce);
 
         /// <summary>
-        /// Logs a verbose message along with the exception.
+        /// Logs a verbose message.
         /// </summary>
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Verbose.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        public static void LogVerbose(string message, string source = "") => Log(new LogMessage(LogSeverity.Verbose, source, message));
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogVerbose(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Verbose, source, message), announce);
 
         /// <summary>
         /// Logs a message.
         /// </summary>
         /// <remarks>Use when another logging method is not precise enough.</remarks>
         /// <param name="message">The message to be logged.</param>
-        public static void Log(LogMessage message)
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void Log(LogMessage message, bool announce = false)
         {
             Console.ForegroundColor = message.Severity switch
             {
@@ -182,8 +183,32 @@ namespace ATCBot
                 LogSeverity.Debug => ConsoleColor.DarkGray,
                 _ => throw new ArgumentException("Invalid severity!")
             };
-            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message} {message.Exception}");
+            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}");
+            if (announce) _ = SendSystemMessage($"**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}");
             Console.ResetColor();
+        }
+
+        /// <summary>
+        /// Send a system message to <see cref="Config.systemMessageChannelId"/> if it is set.
+        /// </summary>
+        /// <param name="s">The message to send.</param>
+        public static async Task SendSystemMessage(string s)
+        {
+            if(config.systemMessageChannelId == 0)
+            {
+                LogInfo("Tried announcing a message but the system channel ID is not set.");
+                return;
+            }
+
+            var systemChannel = (ISocketMessageChannel) await client.GetChannelAsync(config.systemMessageChannelId);
+
+            if (systemChannel == null)
+            {
+                LogInfo("Tried announcing a message but couldn't find a channel.");
+                return;
+            }
+
+            await systemChannel.SendMessageAsync(s);
         }
 
         /// <summary>
@@ -213,6 +238,10 @@ namespace ATCBot
                         }
                         string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players";
                         vtolEmbedBuilder.AddField(lobby.LobbyName, content);
+                    }
+                    if(VTOLLobby.passwordLobbies > 0)
+                    {
+                        vtolEmbedBuilder.WithFooter($"+{VTOLLobby.passwordLobbies} password protected lobbies");
                     }
                 }
                 else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
@@ -301,6 +330,13 @@ namespace ATCBot
 
         async Task ClientReady()
         {
+            //We check the version here so that it outputs to the system channel
+            if (!await Version.CheckVersion())
+            {
+                LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
+                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
+            }
+
             commandHandler = new();
             commandBuilder = new(client);
             client.InteractionCreated += commandHandler.ClientInteractionCreated;
@@ -309,6 +345,7 @@ namespace ATCBot
 
         static void OnExit(object sender, EventArgs e)
         {
+            Program.LogInfo("Shutting down! o7", announce: true);
             if (forceDontSaveConfig) return;
             Console.WriteLine("------");
             if (config.shouldSave)

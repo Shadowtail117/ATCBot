@@ -36,7 +36,7 @@ namespace ATCBot.Commands
 
             if (config.shouldBuildCommands)
             {
-                Program.LogDebug("Building slash commands...", "Slash Command Builder");
+                Program.LogDebug("Building slash commands...", "Slash Command Builder", true);
                 config.shouldBuildCommands = false;
             }
             else

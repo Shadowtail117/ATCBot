@@ -11,7 +11,7 @@ namespace ATCBot.Commands
         public override string Name { get; set; } = "setconfig";
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
         .WithName("setconfig")
-        .WithDescription("Set the value of a configuration option.")
+        .WithDescription("Set the value of a configuration option. Requires permission.")
         .AddOption(new SlashCommandOptionBuilder()
             .WithName("config")
             .WithDescription("The config item.")
@@ -19,8 +19,9 @@ namespace ATCBot.Commands
             .AddChoice("delay", 1)
             .AddChoice("vtollobbyid", 2)
             .AddChoice("jetbornelobbyid", 3)
-            .AddChoice("resetcommands", 4)
+            .AddChoice("systemmessageid", 4)
             .AddChoice("saveconfig", 5)
+            .AddChoice("botroleid", 6)
             .WithType(ApplicationCommandOptionType.Integer)
         ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
 
@@ -43,7 +44,7 @@ namespace ATCBot.Commands
                         }
                         else
                         {
-                            return $"Sorry, I couldn't translate your input into an integer.";
+                            return "Sorry, I couldn't translate your input into an integer.";
                         }
 
                     case 2:
@@ -55,7 +56,7 @@ namespace ATCBot.Commands
                         }
                         else
                         {
-                            return $"Sorry, I couldn't translate your input to an integer.";
+                            return "Sorry, I couldn't translate your input to an integer.";
                         }
 
                     case 3:
@@ -67,25 +68,20 @@ namespace ATCBot.Commands
                         }
                         else
                         {
-                            return $"Sorry, I couldn't translate your input to an integer.";
+                            return "Sorry, I couldn't translate your input to an integer.";
                         }
 
                     case 4:
-                        successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
+                        successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
                         if (successful)
                         {
-                            if (boolValue)
-                            {
-                                Program.config.shouldBuildCommands = true;
-                                return "Will rebuild commands on next restart!";
-                            }
-                            else
-                            {
-                                Program.config.shouldBuildCommands = false;
-                                return "Will not rebuild commands on next restart!";
-                            }
+                            Program.config.systemMessageChannelId = value;
+                            return $"Successfully set system message channel ID to {value}!";
                         }
-                        else return $"Sorry, I couldn't translate your input to a true/false boolean.";
+                        else
+                        {
+                            return "Sorry, I couldn't translate your input to an integer.";
+                        }
 
                     case 5:
                         successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
@@ -102,7 +98,20 @@ namespace ATCBot.Commands
                                 return "Will not save config on shutting down!";
                             }
                         }
-                        else return $"Sorry, I couldn't translate your input to a true/false boolean.";
+                        else return "Sorry, I couldn't translate your input to a true/false boolean.";
+
+                    case 6:
+                        successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
+                        if (successful)
+                        {
+                            Program.config.botRoleId = value;
+                            return $"Successfully set bot role ID to {value}!";
+                        }
+                        else
+                        {
+                            return "Sorry, I couldn't translate your input to an integer.";
+                        }
+
                     default: throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"");
                 }
             }
