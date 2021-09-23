@@ -271,6 +271,7 @@ namespace ATCBot
                     catch (Discord.Net.HttpException e)
                     {
                         LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
+                        shouldUpdate = false;
                     }
                 }
 
@@ -289,6 +290,7 @@ namespace ATCBot
                     catch (Discord.Net.HttpException e)
                     {
                         LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
+                        shouldUpdate = false;
                     }
                 }
 
@@ -336,6 +338,7 @@ namespace ATCBot
                     catch (Discord.Net.HttpException e)
                     {
                         LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
+                        shouldUpdate = false;
                     }
                 }
 
@@ -354,6 +357,7 @@ namespace ATCBot
                     catch (Discord.Net.HttpException e)
                     {
                         LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
+                        shouldUpdate = false;
                     }
                 }
 
