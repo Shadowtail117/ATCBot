@@ -1,4 +1,4 @@
-# ATCBot v1.1.2
+# ATCBot v1.2.0
 [![.NET](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
@@ -13,15 +13,23 @@ Most variables of the bot are changeable using slash commands. See below.
 
 ATCBot currently features the following commands:
 
-| Command         | Parameters                                                   | Description                                           | Permissions Required |
-| -------         | ----------                                                   | -----------                                           | -------------------- |
-| `version`       | None                                                         | Gets the local version of the bot, as updated by me.  | None                 |
-| `startupdating` | None                                                         | Starts updating the lobby information.                | Manage Server        |
-| `stopupdating`  | None                                                         | Stops updating the lobby information                  | Manage Server        |
-| `getconfig`     | `config`: The config item to get.                            | Gets the value of a config item.                      | Manage Server        |
-| `setconfig`     | `config`: The config item to set. `value`: The value to set. | Sets the value of a config item.                      | Manage Server        |
-| `shutdown`      | None                                                         | Shuts down the bot. Requires a manual restart.        | Manage Server        |
-| `refresh`       | None                                                         | Forces the bot to replace old messages with new ones. | Manage Server        |
+| Command           | Parameters                                                   | Description                                           | Permissions Required |
+| -------           | ----------                                                   | -----------                                           | -------------------- |
+| `version`         | None                                                         | Gets the local version of the bot, as updated by me.  | None                 |
+| `startupdating`   | None                                                         | Starts updating the lobby information.                | Bot Role             |
+| `stopupdating`    | None                                                         | Stops updating the lobby information                  | Bot Role             |
+| `getconfig`       | `config`: The config item to get.                            | Gets the value of a config item.                      | Bot Role             |
+| `setconfig`       | `config`: The config item to set. `value`: The value to set. | Sets the value of a config item.                      | Bot Role             |
+| `shutdown`        | None                                                         | Shuts down the bot. Requires a manual restart.        | Bot Role             |
+| `refresh`         | None                                                         | Forces the bot to replace old messages with new ones. | Bot Role             |
+| `rebuildcommands` | None                                                         | Forces the bot to rebuild slash commands.             | Bot Owner            |
+
+#### Bot Role
+"Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
+
+If the bot role is set, then the bot will check if the user either has that role, or has Administrator permissions.
+
+`rebuildcommands` is a special command that has side effects and as such is only available to the person who is marked as the bot owner in the configuration.
 
 #### getconfig
 Valid arguments for `getconfig`:
@@ -29,22 +37,25 @@ Valid arguments for `getconfig`:
 - `updating` - Whether or not the bot is currently updating the lobby messages.
 - `vtolchannelid` - The channel ID set for the bot to post VTOL VR lobby information.
 - `jetbornechannelid` - The channel ID set for the bot to post Jetborne Racing lobby information.
+- `systemmessageid` - The channel ID set for the bot to post system messages.
+- `botroleid` - The role ID set for the bot to check permission to use restricted commands.
 
 ### setconfig
 Valid arguments for `setconfig`'s first parameter:
 - `delay` - The delay **in seconds** between updates to the lobby messages, on top of network processing times.
 - `vtolchannelid` - The channel ID set for the bot to post VTOL VR lobby information.
 - `jetbornechannelid` - The channel ID set for the bot to post Jetborne Racing lobby information.
-- `resetcommands` - Whether or not to rebuild all slash commands on the next start. Only use this if something has gone horribly wrong!
+- `systemmessageid` - The channel ID set for the bot to post system messages.
 - `saveconfig` - Whether or not the configuration will be saved upon exiting. Defaults to true every time.
+- `botroleid` - The role ID set for the bot to check permission to use restricted commands.
 
-The second argument for `setconfig` is any string. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, and `jetbornechannelid`, and a boolean for `resetcommands` and `saveconfig`.
+The second argument for `setconfig` is any text. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, `jetbornechannelid`, and `systemmessageid`, and a boolean for `saveconfig`.
 
 ## Hosting
 
 ATCBot intrinsically requires a configuration in order to work to the host's and server's needs. Upon running the bot for the first time, a `Config` folder will be created in the directory the .exe was run in, and the program will self-terminate.
 
-In the folder is `config.cfg` and `token.txt`. `config.cfg` represents a JSON version of the bot's current configuration and should not be directly edited unless you know what you are doing. A corrupted config will make the bot do bad things! (Mostly just crash.)
+In the folder is `config.cfg` and `token.txt`. `config.cfg` represents a JSON version of the bot's current configuration and should not be directly edited unless you know what you are doing. A corrupted config will make the bot do bad things! (Mostly just crash.) The only exception to this is editing the field marked `botOwnerId`, whose value should be replaced with your user ID.
 
 `token.txt` is where you should put the bot's token, which you should have gotten from the Discord developer portal. This is done not only so that I don't doxx my own bot but also so other people can use their own bots to host ATCBot's code. You must set `token.txt` before running the bot otherwise it will either close after realizing it has been duped, or crash because of a malformed token.
 
@@ -65,6 +76,8 @@ While it may seem obvious, the account must own VTOL VR and Jetborne Racing to w
 ### Monitoring
 
 As a console-line application, ATCBot will open a console window whenever it is running. You cannot input into this window, and it is meant for monitoring/diagnostic purposes. Closing it will close the bot. If you don't want to see it, minimize it.
+
+ATCBot will optionally input into a system messages channel any logs that are considered important. These logs are the same as the ones in the console window and you do not lose information on not setting the channel ID. However, the bot will warn you that it is not set.
 
 ## Credits
 

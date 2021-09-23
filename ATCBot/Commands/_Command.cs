@@ -1,6 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
-
+using System.Linq;
 using System.Collections.Generic;
 
 namespace ATCBot.Commands
@@ -15,8 +15,33 @@ namespace ATCBot.Commands
         /// </summary>
         public static List<Command> AllCommands { get; set; } = new();
 
-        internal static bool HasPerms(SocketGuildUser u) => u.GuildPermissions.ManageGuild;
+        private static bool warnedBotRoleNotSet;
+
+        internal static bool HasPerms(SocketGuildUser u)
+        {
+            if (Program.config.botRoleId == 0)
+            {
+                if (!warnedBotRoleNotSet)
+                {
+                    Program.LogDebug("Bot role ID not set, defaulting to Manage Server for permission checking...", announce: true);
+                    warnedBotRoleNotSet = true;
+                }
+
+                return u.GuildPermissions.ManageGuild;
+            }
+            else return u.GuildPermissions.Administrator || u.Roles.FirstOrDefault(t => t.Id == Program.config.botRoleId) != null;
+        }
         internal static bool HasPerms(SocketUser u)
+        {
+            if (u is SocketGuildUser g)
+            {
+                return HasPerms(g);
+            }
+            else return false;
+        }
+
+        internal static bool IsOwner(SocketGuildUser u) => u.Id == Program.config.botOwnerId;
+        internal static bool IsOwner(SocketUser u)
         {
             if (u is SocketGuildUser g)
             {

@@ -12,7 +12,12 @@ namespace ATCBot.Structs
         /// <summary>
         /// An empty lobby.
         /// </summary>
-        public static readonly VTOLLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", ScenarioText = "" };
+        public static readonly VTOLLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", ScenarioText = ""};
+
+        /// <summary>
+        /// The number of password protected lobbies currently detected.
+        /// </summary>
+        public static int passwordLobbies;
 
         /// <summary>
         /// The name of the lobby.
@@ -56,6 +61,12 @@ namespace ATCBot.Structs
                 OwnerName = lobby.Metadata["oName"];
                 ScenarioText = lobby.Metadata["scn"];
                 MemberCount = lobby.NumMembers;
+                
+                if(!lobby.Metadata["pwh"].Equals("0")) {
+                    passwordLobbies++;
+                    this = Empty;
+                    return;
+                }
             }
             catch (KeyNotFoundException e) //If we catch this, this means there is an actual issue
             {

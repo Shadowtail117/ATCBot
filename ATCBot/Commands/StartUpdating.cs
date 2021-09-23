@@ -18,7 +18,7 @@ namespace ATCBot.Commands
         /// </summary>
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
             .WithName("startupdating")
-            .WithDescription("Start updating the lobby data. Requires Manage Server permissions.");
+            .WithDescription("Start updating the lobby data. Requires permission.");
 
         /// <summary>
         /// <inheritdoc/>
