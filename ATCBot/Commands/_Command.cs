@@ -27,11 +27,10 @@ namespace ATCBot.Commands
                     warnedBotRoleNotSet = true;
                 }
 
-                return u.GuildPermissions.ManageGuild || u.GuildPermissions.Administrator;
+                return u.GuildPermissions.ManageGuild;
             }
-            else return u.Roles.FirstOrDefault(t => t.Id == Program.config.botRoleId) == null;
+            else return u.GuildPermissions.Administrator || u.Roles.FirstOrDefault(t => t.Id == Program.config.botRoleId) != null;
         }
-
         internal static bool HasPerms(SocketUser u)
         {
             if (u is SocketGuildUser g)
@@ -41,7 +40,7 @@ namespace ATCBot.Commands
             else return false;
         }
 
-        internal static bool IsOwner(SocketGuildUser u) => u.Id == Program.config.botOwnerId; //Shadow's ID
+        internal static bool IsOwner(SocketGuildUser u) => u.Id == Program.config.botOwnerId;
         internal static bool IsOwner(SocketUser u)
         {
             if (u is SocketGuildUser g)
