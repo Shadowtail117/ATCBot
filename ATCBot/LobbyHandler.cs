@@ -13,13 +13,16 @@ namespace ATCBot
 {
     class LobbyHandler
     {
-        public TimeSpan delay = TimeSpan.FromSeconds(Program.config.delay);
-        public TimeSpan steamTimeout = TimeSpan.FromSeconds(Program.config.steamTimeout);
 
         public List<VTOLLobby> vtolLobbies = new();
         public List<JetborneLobby> jetborneLobbies = new();
 
         public Program program;
+
+        /// <summary>
+        /// The amount of password-protected VTOL VR lobbies.
+        /// </summary>
+        public static int PasswordedLobbies { get; set; }
 
         /// <summary>
         /// Whether or not the Steam client. is currently logged in.
@@ -41,13 +44,13 @@ namespace ATCBot
             if (Program.shouldUpdate)
             {
                 if(triedLoggingIn) Program.LogInfo("Updating lobbies...", "Lobby Handler");
-                manager.RunWaitCallbacks(steamTimeout);
+                manager.RunWaitCallbacks(TimeSpan.FromSeconds(Program.config.steamTimeout));
                 await GetLobbies();
-                await program.UpdateLobbyInformation();
+                await program.UpdateInformation();
             }
             else if (triedLoggingIn) Program.LogInfo("Skipping update...", "Lobby Handler");
-            await Task.Delay(delay);
-            await QueryTimer();
+            await Task.Delay(TimeSpan.FromSeconds(Program.config.delay));
+            _ =  QueryTimer();
         }
 
         public LobbyHandler(Program program)
@@ -164,10 +167,8 @@ namespace ATCBot
                 fileSize = (int)fs.Length;
 
                 fs.Seek(0, SeekOrigin.Begin);
-                using (var sha = SHA1.Create())
-                {
-                    sentryHash = sha.ComputeHash(fs);
-                }
+                using var sha = SHA1.Create();
+                sentryHash = sha.ComputeHash(fs);
             }
 
             // inform the steam servers that we're accepting this sentry file
@@ -205,11 +206,31 @@ namespace ATCBot
             vtolLobbies.Clear();
             jetborneLobbies.Clear();
 
-            VTOLLobby.passwordLobbies = 0;
+            PasswordedLobbies = 0;
 
+            var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID);
+            var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID);
 
-            vtolLobbies.AddRange((await matchmaking.GetLobbyList(Program.vtolID)).Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(VTOLLobby.Empty)));
-            jetborneLobbies.AddRange((await matchmaking.GetLobbyList(Program.jetborneID)).Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(JetborneLobby.Empty)));
+            if (vtolLobbiesRaw != null)
+            {
+                vtolLobbies.AddRange(vtolLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(default(VTOLLobby))));
+                PasswordedLobbies = vtolLobbies.Where(lobby => lobby.PasswordHash != 0).Count();
+            }
+            else
+            {
+                Program.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", true);
+                vtolLobbies = new List<VTOLLobby>();
+            }
+
+            if (jetborneLobbiesRaw != null)
+            {
+                jetborneLobbies.AddRange(jetborneLobbiesRaw.Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(default(JetborneLobby))));
+            }
+            else
+            {
+                Program.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
+                jetborneLobbies = new List<JetborneLobby>();
+            }
         }
     }
 }
