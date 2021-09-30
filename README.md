@@ -1,4 +1,4 @@
-# ATCBot v1.2.0
+# ATCBot v1.3.0
 [![.NET](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/release.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
@@ -13,16 +13,17 @@ Most variables of the bot are changeable using slash commands. See below.
 
 ATCBot currently features the following commands:
 
-| Command           | Parameters                                                   | Description                                           | Permissions Required |
-| -------           | ----------                                                   | -----------                                           | -------------------- |
-| `version`         | None                                                         | Gets the local version of the bot, as updated by me.  | None                 |
-| `startupdating`   | None                                                         | Starts updating the lobby information.                | Bot Role             |
-| `stopupdating`    | None                                                         | Stops updating the lobby information                  | Bot Role             |
-| `getconfig`       | `config`: The config item to get.                            | Gets the value of a config item.                      | Bot Role             |
-| `setconfig`       | `config`: The config item to set. `value`: The value to set. | Sets the value of a config item.                      | Bot Role             |
-| `shutdown`        | None                                                         | Shuts down the bot. Requires a manual restart.        | Bot Role             |
-| `refresh`         | None                                                         | Forces the bot to replace old messages with new ones. | Bot Role             |
-| `rebuildcommands` | None                                                         | Forces the bot to rebuild slash commands.             | Bot Owner            |
+| Command           | Parameters                                                        | Description                                           | Permissions Required |
+| ----------------- | ----------------------------------------------------------------- | ----------------------------------------------------- | -------------------- |
+| `version`         | None                                                              | Gets the local version of the bot, as updated by me.  | None                 |
+| `startupdating`   | None                                                              | Starts updating the lobby information.                | Bot Role             |
+| `stopupdating`    | None                                                              | Stops updating the lobby information                  | Bot Role             |
+| `getconfig`       | `config`: The config item to get.                                 | Gets the value of a config item.                      | Bot Role             |
+| `setconfig`       | `config`: The config item to set.<br/>`value`: The value to set.  | Sets the value of a config item.                      | Bot Role             |
+| `shutdown`        | None                                                              | Shuts down the bot. Requires a manual restart.        | Bot Role             |
+| `refresh`         | None                                                              | Forces the bot to replace old messages with new ones. | Bot Role             |
+| `rebuildcommands` | None                                                              | Forces the bot to rebuild slash commands.             | Bot Owner            |
+| `setlogverbosity` | `verbosity`: The verbosity to set.                                | Sets the verbosity of logs/system messages.           | Bot Owner            |
 
 #### Bot Role
 "Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
@@ -51,6 +52,12 @@ Valid arguments for `setconfig`'s first parameter:
 
 The second argument for `setconfig` is any text. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, `jetbornechannelid`, and `systemmessageid`, and a boolean for `saveconfig`.
 
+### setlogverbosity
+Valid arguments for `setlogverbosity`:
+- `normal` - Displays only informational, warning, error, and critical messages. Does not display verbose or debug messages.
+- `verbose` - Displays informational, warning, error, critical, and verbose messages. Does not display debug messages.
+- `debug` - Displays all messages.
+
 ## Hosting
 
 ATCBot intrinsically requires a configuration in order to work to the host's and server's needs. Upon running the bot for the first time, a `Config` folder will be created in the directory the .exe was run in, and the program will self-terminate.
@@ -77,7 +84,7 @@ While it may seem obvious, the account must own VTOL VR and Jetborne Racing to w
 
 As a console-line application, ATCBot will open a console window whenever it is running. You cannot input into this window, and it is meant for monitoring/diagnostic purposes. Closing it will close the bot. If you don't want to see it, minimize it.
 
-ATCBot will optionally input into a system messages channel any logs that are considered important. These logs are the same as the ones in the console window and you do not lose information on not setting the channel ID. However, the bot will warn you that it is not set.
+ATCBot will optionally input into a system messages channel any logs that are considered important. These logs are the same as the ones in the console window and you do not lose information by not setting the channel ID. However, the bot will warn you that it is not set.
 
 ## Credits
 
