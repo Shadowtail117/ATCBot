@@ -27,7 +27,7 @@ namespace ATCBot
         /// <summary>
         /// The program's instance of the bot.
         /// </summary>
-        public static DiscordSocketClient client;
+        public static DiscordSocketClient Client { get; set; }
 
         private CommandBuilder commandBuilder;
 
@@ -37,6 +37,8 @@ namespace ATCBot
 
         private static bool forceDontSaveConfig = false;
 
+        private static bool warnedNoSystemChannel = false;
+
         /// <summary>
         /// Whether or not we should be updating the lobby information.
         /// </summary>
@@ -45,7 +47,7 @@ namespace ATCBot
         /// <summary>
         /// The current instance of the config.
         /// </summary>
-        public static Config config = Config.config;
+        public static Config config = Config.Current;
 
         /// <summary>
         /// Whether or not we should immediately shutdown.
@@ -56,6 +58,19 @@ namespace ATCBot
         /// Whether or not we should refresh the messages.
         /// </summary>
         public static bool shouldRefresh = false;
+
+        /// <summary>
+        /// The verbosity of logs to show.
+        /// </summary>
+        public enum LogVerbosity { 
+            /// <summary>Does not show debug or verbose logs.</summary>
+            Normal, 
+            /// <summary>Shows verbose logs but not debug logs.</summary>
+            Verbose,
+            /// <summary>Shows verbose and debug logs.</summary>
+            Debug
+        }
+
 
         static void Main(string[] args)
         {
@@ -82,18 +97,25 @@ namespace ATCBot
                 return;
 
             }
-
-            new Program().MainAsync().GetAwaiter().GetResult();
+            try
+            {
+                new Program().MainAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                LogCritical($"{(config.botRoleId == 0 ? "" : $"<@&{config.botRoleId}> ")}Fatal error! {e.Message}", e, "Main", true);
+                Environment.Exit(1);
+            }
         }
 
         async Task MainAsync()
         {
-            client = new DiscordSocketClient();
-            client.Log += DiscordLog;
-            client.Ready += ClientReady;
+            Client = new DiscordSocketClient();
+            Client.Log += DiscordLog;
+            Client.Ready += ClientReady;
 
-            await client.LoginAsync(TokenType.Bot, config.token);
-            await client.StartAsync();
+            await Client.LoginAsync(TokenType.Bot, config.token);
+            await Client.StartAsync();
 
             lobbyHandler = new(this);
 
@@ -173,6 +195,15 @@ namespace ATCBot
         /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
         public static void Log(LogMessage message, bool announce = false)
         {
+            if(config.logVerbosity == LogVerbosity.Normal)
+            {
+                if (message.Severity == LogSeverity.Verbose || message.Severity == LogSeverity.Debug) return;
+            }
+            if(config.logVerbosity == LogVerbosity.Verbose)
+            {
+                if (message.Severity == LogSeverity.Debug) return;
+            }
+
             Console.ForegroundColor = message.Severity switch
             {
                 LogSeverity.Critical => ConsoleColor.Red,
@@ -184,7 +215,7 @@ namespace ATCBot
                 _ => throw new ArgumentException("Invalid severity!")
             };
             Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}");
-            if (announce) _ = SendSystemMessage($"**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}");
+            if (announce) _ = SendSystemMessage($"**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}{(message.Exception == null ? "" : $" {message.Exception.Message}")}");
             Console.ResetColor();
         }
 
@@ -194,17 +225,18 @@ namespace ATCBot
         /// <param name="s">The message to send.</param>
         public static async Task SendSystemMessage(string s)
         {
-            if(config.systemMessageChannelId == 0)
+            if(config.systemMessageChannelId == 0 && !warnedNoSystemChannel)
             {
                 LogInfo("Tried announcing a message but the system channel ID is not set.");
+                warnedNoSystemChannel = true;
                 return;
             }
 
-            var systemChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.systemMessageChannelId);
+            var systemChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.systemMessageChannelId);
 
             if (systemChannel == null)
             {
-                LogInfo("Tried announcing a message but couldn't find a channel.");
+                LogWarning("Tried announcing a message but couldn't find a channel.");
                 return;
             }
 
@@ -221,7 +253,7 @@ namespace ATCBot
         /// <summary>
         /// Update the lobby information, either editing past messages or creating new ones.
         /// </summary>
-        public async Task UpdateLobbyInformation()
+        public async Task UpdateInformation()
         {
             if (!LobbyHandler.triedLoggingIn) return;
 
@@ -238,22 +270,22 @@ namespace ATCBot
                 {
                     foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
                     {
-                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioText == string.Empty)
+                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                         {
-                            LogWarning("Invalid lobby state!", "VTOL Embed Builder");
+                            LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
                             continue;
                         }
-                        string content = $"{lobby.ScenarioText}\n{lobby.MemberCount} Players";
+                        string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players";
                         vtolEmbedBuilder.AddField(lobby.LobbyName, content);
                     }
-                    if(VTOLLobby.passwordLobbies > 0)
+                    if(LobbyHandler.PasswordedLobbies > 0)
                     {
-                        vtolEmbedBuilder.WithFooter($"+{VTOLLobby.passwordLobbies} password protected {(VTOLLobby.passwordLobbies == 1 ? "lobby" : "lobbies")}");
+                        vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
                     }
                 }
                 else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
 
-                var vtolChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.vtolLobbyChannelId);
+                var vtolChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.vtolLobbyChannelId);
 
                 if (vtolChannel == null)
                 {
@@ -314,13 +346,13 @@ namespace ATCBot
                             LogWarning("Invalid lobby state!", "JBR Embed Builder");
                             continue;
                         }
-                        string content = $"{lobby.MemberCount} Players\nLap" + lobby.CurrentLap == string.Empty ? "Currently In Lobby" : $"Lap {lobby.CurrentLap}/{lobby.RaceLaps}";
+                        string content = $"{lobby.PlayerCount} Players\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
                         jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
                     }
                 }
                 else jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
 
-                var jetborneChannel = (ISocketMessageChannel)await client.GetChannelAsync(config.jetborneLobbyChannelId);
+                var jetborneChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.jetborneLobbyChannelId);
 
                 if (jetborneChannel == null)
                 {
@@ -377,14 +409,14 @@ namespace ATCBot
             }
 
             commandHandler = new();
-            commandBuilder = new(client);
-            client.InteractionCreated += commandHandler.ClientInteractionCreated;
+            commandBuilder = new(Client);
+            Client.InteractionCreated += commandHandler.ClientInteractionCreated;
             await commandBuilder.BuildCommands();
         }
 
         static void OnExit(object sender, EventArgs e)
         {
-            Program.LogInfo("Shutting down! o7", announce: true);
+            LogInfo("Shutting down! o7", announce: true);
             if (forceDontSaveConfig) return;
             Console.WriteLine("------");
             if (config.shouldSave)
@@ -394,9 +426,6 @@ namespace ATCBot
             }
             else
                 Console.WriteLine("Not saving config!");
-
-            Console.WriteLine("Press any key to exit. Goodbye!");
-            Console.ReadKey();
         }
     }
 }
