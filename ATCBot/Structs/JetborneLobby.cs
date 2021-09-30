@@ -1,4 +1,6 @@
 using SteamKit2;
+
+using System;
 using System.Collections.Generic;
 
 namespace ATCBot.Structs
@@ -8,65 +10,96 @@ namespace ATCBot.Structs
     /// </summary>
     public struct JetborneLobby
     {
-        /// <summary>
-        /// An empty lobby.
-        /// </summary>
-        public static readonly JetborneLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", RaceLaps = "", CurrentLap = "", Map = "" };
+        private string lobbyName;
+        private string ownerName;
+        private string currentLap;
+        private string raceLaps;
+        private string map;
+        private string leaderboardsEnabled;
+        private string blackoutMode;
+        private string gameVersion;
+        private string allowItems;
+        private string playerCollisions;
+        private string wallMode;
+        private int playerCount;
 
         /// <summary>
         /// The name of the lobby.
         /// </summary>
-        public string LobbyName;
+        public string LobbyName { get => lobbyName; private set => lobbyName = value; }
 
         /// <summary>
         /// The name of the owner of the lobby.
         /// </summary>
-        public string OwnerName;
+        public string OwnerName { get => ownerName; private set => ownerName = value; }
 
         /// <summary>
-        /// How many people are in the lobby.
+        /// The current lap, 0 if still in the lobby.
         /// </summary>
-        public int MemberCount;
+        public int CurrentLap { get => int.Parse(currentLap); private set => currentLap = value.ToString(); }
 
         /// <summary>
-        /// How many laps are in the race.
+        /// The total amount of laps.
         /// </summary>
-        public string RaceLaps;
-
-        /// <summary>
-        /// The current lap.
-        /// </summary>
-        public string CurrentLap;
+        public int RaceLaps { get => int.Parse(raceLaps); private set => raceLaps = value.ToString(); }
 
         /// <summary>
         /// The name of the map being used.
         /// </summary>
-        public string Map;
+        public string Map { get => map; private set => map = value; }
 
-        /// <summary />
+        /// <summary>
+        /// Whether or not leaderboards are enabled for this lobby.
+        /// </summary>
+        public bool LeaderboardsEnabled { get => bool.Parse(leaderboardsEnabled); private set => leaderboardsEnabled = value.ToString(); }
+
+        /// <summary>
+        /// The type of blackout mode being used.
+        /// </summary>
+        public string BlackoutMode { get => blackoutMode; private set => blackoutMode = value; }
+
+        /// <summary>
+        /// The version of the game the lobby is running.
+        /// </summary>
+        public string GameVersion { get => gameVersion; private set => gameVersion = value; }
+
+        /// <summary>
+        /// Whether or not items are allowed.
+        /// </summary>
+        public bool AllowItems { get => bool.Parse(allowItems); private set => allowItems = value.ToString(); }
+
+        /// <summary>
+        /// Whether or not player collisions are allowed.
+        /// </summary>
+        public bool PlayerCollisions { get => bool.Parse(playerCollisions); private set => playerCollisions = value.ToString(); }
+
+        /// <summary>
+        /// The type of wall mode being used.
+        /// </summary>
+        public string WallMode { get => wallMode; private set => wallMode = value; }
+
+        /// <summary>
+        /// The current amount of players in the lobby.
+        /// </summary>
+        public int PlayerCount { get => playerCount; private set => playerCount = value; }
+
+        /// <summary>Create a lobby from a SteamKit2 lobby.</summary>>
         public JetborneLobby(SteamMatchmaking.Lobby lobby)
         {
-            try
-            {
-                LobbyName = lobby.Metadata["name"];
-                OwnerName = lobby.Metadata["ownerName"];
-                RaceLaps = lobby.Metadata["raceLaps"];
-                Map = lobby.Metadata["map"];
-                if (lobby.Metadata.TryGetValue("currentLap", out string value))
-                {
-                    CurrentLap = value;
-                }
-                else
-                {
-                    CurrentLap = string.Empty;
-                }
-                MemberCount = lobby.NumMembers;
-            }
-            catch(KeyNotFoundException e)
-            {
-                Program.LogError("Could not parse lobby metadata!", e, "JBR Lobby Constructor");
-                this = Empty;
-            }
+            bool successful = true;
+            playerCount = lobby.NumMembers;
+            if (!lobby.Metadata.TryGetValue("name", out lobbyName)) successful = false;
+            if (!lobby.Metadata.TryGetValue("ownername", out ownerName)) successful = false;
+            if (!lobby.Metadata.TryGetValue("currentLap", out currentLap)) successful = false;
+            if (!lobby.Metadata.TryGetValue("raceLaps", out raceLaps)) successful = false;
+            if (!lobby.Metadata.TryGetValue("map", out map)) successful = false;
+            if (!lobby.Metadata.TryGetValue("leaderboardsEnabled", out leaderboardsEnabled)) successful = false;
+            if (!lobby.Metadata.TryGetValue("blackoutMode", out blackoutMode)) successful = false;
+            if (!lobby.Metadata.TryGetValue("gameVersion", out gameVersion)) successful = false;
+            if (!lobby.Metadata.TryGetValue("allowItems", out allowItems)) successful = false;
+            if (!lobby.Metadata.TryGetValue("playerCollisions", out playerCollisions)) successful = false;
+            if (!lobby.Metadata.TryGetValue("wallMode", out wallMode)) successful = false;
+            if (!successful) Program.LogWarning("One or more keys could not be set correctly!", "JBR Lobby Constructor", true);
         }
     }
 }

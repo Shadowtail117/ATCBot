@@ -11,7 +11,7 @@ namespace ATCBot
         /// <summary>
         /// The local version of the bot.
         /// </summary>
-        public static string LocalVersion { get; } = "1.2.1";
+        public static string LocalVersion { get; } = "1.3.0";
 
         /// <summary>
         /// The remote version on the repository.
@@ -26,7 +26,7 @@ namespace ATCBot
         /// <returns>Whether or not the local version matches the remote version.</returns>
         public static async Task<bool> CheckVersion()
         {
-            HttpClient client = new HttpClient();
+            HttpClient client = new();
 
             try
             {

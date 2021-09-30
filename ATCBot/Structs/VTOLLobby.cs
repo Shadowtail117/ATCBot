@@ -9,70 +9,103 @@ namespace ATCBot.Structs
     /// </summary>
     public struct VTOLLobby
     {
-        /// <summary>
-        /// An empty lobby.
-        /// </summary>
-        public static readonly VTOLLobby Empty = new() { LobbyName = "", MemberCount = 0, OwnerName = "", ScenarioText = ""};
-
-        /// <summary>
-        /// The number of password protected lobbies currently detected.
-        /// </summary>
-        public static int passwordLobbies;
+        private string lobbyName;
+        private string ownerName;
+        private string ownerId;
+        private string scenarioName;
+        private string scenarioId;
+        private string maxPlayers;
+        private string feature;
+        private string envIdx;
+        private string gameVersion;
+        private string briefingRoom;
+        private string passwordHash;
+        private int playerCount;
 
         /// <summary>
         /// The name of the lobby.
         /// </summary>
-        public string LobbyName;
+        public string LobbyName { get => lobbyName; private set => lobbyName = value; }
 
         /// <summary>
         /// The name of the owner of the lobby.
         /// </summary>
-        public string OwnerName;
+        public string OwnerName { get => ownerName; private set => ownerName = value; }
 
         /// <summary>
-        /// The name of the scenario the lobby is currently running.
+        /// The Steam ID of the owner of the lobby.
         /// </summary>
-        public string ScenarioText;
+        public string OwnerId { get => ownerId; private set => ownerId = value; }
 
         /// <summary>
-        /// How many people are in the lobby.
+        /// The name of the scenario of the lobby.
         /// </summary>
-        public int MemberCount;
+        public string ScenarioName { get => scenarioName; private set => scenarioName = value; }
 
-        /// <summary />
+        /// <summary>
+        /// The ID of the scenario of the lobby.
+        /// </summary>
+        public string ScenarioId { get => scenarioId; private set => scenarioId = value; }
+
+        /// <summary>
+        /// The maximum number of players in the lobby.
+        /// </summary>
+        public int MaxPlayers { get => int.Parse(maxPlayers); private set => maxPlayers = value.ToString(); }
+
+        /// <summary>
+        /// Unused.
+        /// </summary>
+        public string Feature { get => feature; private set => feature = value; }
+
+        /// <summary>
+        /// Unused.
+        /// </summary>
+        public int EnvIdx { get => int.Parse(envIdx); private set => envIdx = value.ToString(); }
+
+        /// <summary>
+        /// The version of the game the lobby is running.
+        /// </summary>
+        public string GameVersion { get => gameVersion; private set => gameVersion = value; }
+
+        /// <summary>
+        /// The type of briefing room being used.
+        /// </summary>
+        // TODO: enumerate types
+        public int BriefingRoom { get => int.Parse(briefingRoom); private set => briefingRoom = value.ToString(); }
+
+        /// <summary>
+        /// The password hash of the lobby. 0 means it is public.
+        /// </summary>
+        public int PasswordHash { get => int.Parse(passwordHash); private set => passwordHash = value.ToString(); }
+
+        /// <summary>
+        /// The current amount of players in the lobby.
+        /// </summary>
+        public int PlayerCount { get => playerCount; private set => playerCount = value; }
+
+        /// <summary>Create a lobby from a SteamKit2 lobby.</summary>
         public VTOLLobby(SteamMatchmaking.Lobby lobby)
         {
-            try
+            if(lobby.Metadata.ContainsKey("name"))
             {
-                _ = lobby.Metadata["name"];
-                //If we get this far, this means this IS an MP mod lobby
-                Program.LogVerbose("Skipping over modded lobby...", "VTOL Lobby Constructor");
-                this = Empty;
+                Program.LogVerbose("Skipping modded lobby...");
+                this = default;
                 return;
             }
-            catch (KeyNotFoundException) //If we catch an error, this means this is NOT an MP mod lobby
-            {
-
-            }
-
-            try
-            {
-                LobbyName = lobby.Metadata["lName"];
-                OwnerName = lobby.Metadata["oName"];
-                ScenarioText = lobby.Metadata["scn"];
-                MemberCount = lobby.NumMembers;
-                
-                if(!lobby.Metadata["pwh"].Equals("0")) {
-                    passwordLobbies++;
-                    this = Empty;
-                    return;
-                }
-            }
-            catch (KeyNotFoundException e) //If we catch this, this means there is an actual issue
-            {
-                Program.LogError("Could not parse lobby metadata!", e, "VTOL Lobby Constructor");
-                this = Empty;
-            }
+            bool successful = true;
+            playerCount = lobby.NumMembers;
+            if (!lobby.Metadata.TryGetValue("lName", out lobbyName)) successful = false;
+            if (!lobby.Metadata.TryGetValue("oName", out ownerName)) successful = false;
+            if (!lobby.Metadata.TryGetValue("oId", out ownerId)) successful = false;
+            if (!lobby.Metadata.TryGetValue("scn", out scenarioName)) successful = false;
+            if (!lobby.Metadata.TryGetValue("scID", out scenarioId)) successful = false;
+            if (!lobby.Metadata.TryGetValue("maxP", out maxPlayers)) successful = false;
+            if (!lobby.Metadata.TryGetValue("feature", out feature)) successful = false;
+            if (!lobby.Metadata.TryGetValue("envIdx", out envIdx)) successful = false;
+            if (!lobby.Metadata.TryGetValue("ver", out gameVersion)) successful = false;
+            if (!lobby.Metadata.TryGetValue("brtype", out briefingRoom)) successful = false;
+            if (!lobby.Metadata.TryGetValue("pwh", out passwordHash)) successful = false;
+            if (!successful) Program.LogWarning("One or more keys could not be set correctly!", "VTOL VR Lobby Constructor", true);
         }
     }
 }

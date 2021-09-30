@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 using System;
 using System.IO;
@@ -13,7 +14,7 @@ namespace ATCBot
         /// <summary>
         /// A global config to use for this instance of the bot.
         /// </summary>
-        public static Config config;
+        public static Config Current { get; set; }
 
         /// <summary>
         /// The bot's token. Loaded externally from <see cref="saveFile"/>.
@@ -26,6 +27,12 @@ namespace ATCBot
         /// </summary>
         [JsonIgnore]
         public bool shouldSave = true;
+
+        /// <summary>
+        /// The current verbosity of the logs.
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Program.LogVerbosity logVerbosity;
 
         /// <summary>
         /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.

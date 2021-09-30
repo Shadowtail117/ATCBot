@@ -13,16 +13,16 @@ namespace ATCBot.Commands
 
         public override string Action(SocketSlashCommand command)
         {
-            if (Config.config.botOwnerId == 0)
+            if (Program.config.botOwnerId == 0)
             {
                 return "Owner ID has not been set in the config! Please set that first.";
             }
 
             if (IsOwner(command.User))
             {
-                Config.config.shouldBuildCommands = !Config.config.shouldBuildCommands;
+                Program.config.shouldBuildCommands = !Program.config.shouldBuildCommands;
 
-                return $"Will{(Config.config.shouldBuildCommands ? " " : " not ")}rebuild commands on next start!";
+                return $"Will{(Program.config.shouldBuildCommands ? " " : " not ")}rebuild commands on next start!";
             }
             else return "Sorry, you don't have the permissions to use this command!";
         }
