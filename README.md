@@ -1,4 +1,4 @@
-# ATCBot v1.3.0
+# ATCBot v1.3.1
 [![Build](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
@@ -17,7 +17,7 @@ ATCBot currently features the following commands:
 | ----------------- | ----------------------------------------------------------------- | ----------------------------------------------------- | -------------------- |
 | `version`         | None                                                              | Gets the local version of the bot, as updated by me.  | None                 |
 | `startupdating`   | None                                                              | Starts updating the lobby information.                | Bot Role             |
-| `stopupdating`    | None                                                              | Stops updating the lobby information                  | Bot Role             |
+| `stopupdating`    | None                                                              | Stops updating the lobby information.                 | Bot Role             |
 | `getconfig`       | `config`: The config item to get.                                 | Gets the value of a config item.                      | Bot Role             |
 | `setconfig`       | `config`: The config item to set.<br/>`value`: The value to set.  | Sets the value of a config item.                      | Bot Role             |
 | `shutdown`        | None                                                              | Shuts down the bot. Requires a manual restart.        | Bot Role             |
