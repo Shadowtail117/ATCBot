@@ -34,7 +34,7 @@ namespace ATCBot.Commands
 
             if (IsOwner(command.User))
             {
-                Program.config.logVerbosity = (Program.LogVerbosity)Convert.ToInt32(command.Data.Options.ElementAt(0).Value);
+                Program.config.logVerbosity = (Log.LogVerbosity)Convert.ToInt32(command.Data.Options.ElementAt(0).Value);
                 return $"Successfully set log verbosity to {Program.config.logVerbosity}!";
             }
             else return "Sorry, you don't have the permissions to use this command!";

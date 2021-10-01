@@ -11,14 +11,8 @@ namespace ATCBot.Commands
     /// </summary>
     class GetConfig : Command
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public override string Name { get; set; } = "getconfig";
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
         .WithName("getconfig")
         .WithDescription("Get the value of a configuration option. Requires permission.")
@@ -35,19 +29,14 @@ namespace ATCBot.Commands
             .WithType(ApplicationCommandOptionType.Integer)
         );
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="command"><inheritdoc/></param>
-        /// <returns><inheritdoc/></returns>
         public override string Action(SocketSlashCommand command)
         {
             if (HasPerms(command.User))
             {
                 return Convert.ToInt32(command.Data.Options.First().Value) switch
                 {
-                    1 => Program.config.delay.ToString(),
-                    2 => Program.shouldUpdate.ToString(),
+                    1 => Program.config.delay.ToString() + " seconds",
+                    2 => Program.updating.ToString(),
                     3 => Program.config.vtolLobbyChannelId.ToString(),
                     4 => Program.config.jetborneLobbyChannelId.ToString(),
                     5 => Program.config.systemMessageChannelId.ToString(),

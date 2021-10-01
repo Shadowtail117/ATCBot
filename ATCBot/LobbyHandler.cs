@@ -7,17 +7,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ATCBot
 {
-    class LobbyHandler
+    internal class LobbyHandler
     {
 
         public List<VTOLLobby> vtolLobbies = new();
         public List<JetborneLobby> jetborneLobbies = new();
 
         public Program program;
+
+        /// <summary>
+        /// The cancellation token source for the query method, in case canceling it is required.
+        /// </summary>
+        public static CancellationTokenSource queryToken = new();
 
         /// <summary>
         /// The amount of password-protected VTOL VR lobbies.
@@ -39,24 +45,32 @@ namespace ATCBot
         private SteamUser user;
         private SteamMatchmaking matchmaking;
 
-        public async Task QueryTimer()
+        public async Task QueryTimer(CancellationToken token)
         {
-            if (Program.shouldUpdate)
+            if (Program.updating)
             {
-                if(triedLoggingIn) Program.LogInfo("Updating lobbies...", "Lobby Handler");
+                if(triedLoggingIn) Log.LogInfo("Updating lobbies...", "Lobby Handler");
                 manager.RunWaitCallbacks(TimeSpan.FromSeconds(Program.config.steamTimeout));
                 await GetLobbies();
                 await program.UpdateInformation();
             }
-            else if (triedLoggingIn) Program.LogInfo("Skipping update...", "Lobby Handler");
-            await Task.Delay(TimeSpan.FromSeconds(Program.config.delay));
-            _ =  QueryTimer();
+            else if (triedLoggingIn) Log.LogInfo("Skipping update...", "Lobby Handler");
+            await Task.Delay(TimeSpan.FromSeconds(Program.config.delay), token);
+            _ =  QueryTimer(token);
         }
 
         public LobbyHandler(Program program)
         {
             this.program = program;
             SetupSteam();
+        }
+
+        public async void ResetQueryTimer()
+        {
+            queryToken.Cancel();
+            queryToken = new();
+            await Task.Delay(Program.config.delay);
+            _ = QueryTimer(queryToken.Token);
         }
 
         private void SetupSteam()
@@ -68,7 +82,7 @@ namespace ATCBot
 
             SetupCallbacks();
 
-            Program.LogInfo("Setting up Steam connection...");
+            Log.LogInfo("Setting up Steam connection...");
             client.Connect();
         }
 
@@ -83,7 +97,7 @@ namespace ATCBot
 
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            Program.LogInfo($"Connected to Steam API. Logging into {SteamConfig.Config.SteamUserName}.", "Lobby Handler");
+            Log.LogInfo($"Connected to Steam API. Logging into {SteamConfig.Config.SteamUserName}.", "Lobby Handler");
 
             byte[] sentryHash = null;
             string sentryPath = Path.Combine(Directory.GetCurrentDirectory(), "sentry.bin");
@@ -105,7 +119,7 @@ namespace ATCBot
 
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Program.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!", "Lobby Handler", true);
+            Log.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!", "Lobby Handler", true);
         }
 
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
@@ -117,41 +131,41 @@ namespace ATCBot
 
             if (hasSteamGuard)
             {
-                Program.LogWarning($"Looks like Steam does not trust this machine yet. " +
+                Log.LogWarning($"Looks like Steam does not trust this machine yet. " +
                     $"You have been emailed an auth code, please input that into steam.json and re-run the program.", "Lobby Handler", true);
                 Environment.Exit(1);
             }
 
             if (hasF2A)
             {
-                Program.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.", "Lobby Handler", true);
+                Log.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.", "Lobby Handler", true);
                 Environment.Exit(1);
             }
 
             if (callback.Result != EResult.OK)
             {
-                Program.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}", "Lobby Handler", true);
+                Log.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}", "Lobby Handler", true);
                 if (callback.Result.ToString().Equals("TryAnotherCM")) {
-                    Program.LogInfo("Will try to log in again, since this might not be our fault.", "Lobby Handler", true);
-                    OnConnected(default);
+                    Log.LogInfo("Will try to log in again, since this might not be our fault.", "Lobby Handler", true);
+                    SetupSteam();
                     return;
                 }
                 else Environment.Exit(1);
             }
 
-            Program.LogInfo("Logged into Steam account!", "Lobby Handler", true);
+            Log.LogInfo("Logged into Steam account!", "Lobby Handler", true);
             loggedIn = true;
         }
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
-            Program.LogWarning("Logged out of Steam!", "Lobby Handler", true);
+            Log.LogWarning("Logged out of Steam!", "Lobby Handler", true);
             loggedIn = false;
         }
 
         private void OnMachineAuth(SteamUser.UpdateMachineAuthCallback callback)
         {
-            Program.LogInfo("Updating sentryfile...");
+            Log.LogInfo("Updating sentryfile...");
 
             // write out our sentry file
             // ideally we'd want to write to the filename specified in the callback
@@ -190,7 +204,7 @@ namespace ATCBot
                 SentryFileHash = sentryHash,
             });
 
-            Program.LogInfo("Done! You shouldn't need to re-authorize this computer again (unless you have Steam Guard enabled)!");
+            Log.LogInfo("Done! You shouldn't need to re-authorize this computer again (unless you have Steam Guard enabled)!");
         }
 
         private async Task GetLobbies()
@@ -199,7 +213,7 @@ namespace ATCBot
 
             if (!loggedIn)
             {
-                Program.LogWarning("Not logged into Steam, can't fetch lobby information!");
+                Log.LogWarning("Not logged into Steam, can't fetch lobby information!");
                 return;
             }
 
@@ -218,7 +232,7 @@ namespace ATCBot
             }
             else
             {
-                Program.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", true);
+                Log.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", true);
                 vtolLobbies = new List<VTOLLobby>();
             }
 
@@ -228,7 +242,7 @@ namespace ATCBot
             }
             else
             {
-                Program.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
+                Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
                 jetborneLobbies = new List<JetborneLobby>();
             }
         }

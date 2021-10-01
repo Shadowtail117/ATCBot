@@ -56,7 +56,7 @@ namespace ATCBot
         {
             if (!Directory.Exists(saveDirectory) || !File.Exists(saveFile))
             {
-                Program.LogInfo($"steam.json does not exist, creating one! Please add in your Steam credentials.");
+                Log.LogInfo($"steam.json does not exist, creating one! Please add in your Steam credentials.");
                 Save(new SteamConfig());
                 return false;
             }
@@ -67,7 +67,7 @@ namespace ATCBot
             }
             catch(JsonReaderException e)
             {
-                Program.LogError("Could not read steam.json! Check that the file isn't corrupted.", e);
+                Log.LogError("Could not read steam.json! Check that the file isn't corrupted.", e);
             }
 
             if (Config.SteamUserName == null || Config.SteamPassword == null)
