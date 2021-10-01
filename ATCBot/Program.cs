@@ -303,7 +303,7 @@ namespace ATCBot
 
         private async Task OnDisconnected(Exception e)
         {
-            Log.LogInfo("Discord has disconnected, trying to reconnect...", "Discord Client");
+            Log.LogInfo("Discord has disconnected, trying to reconnect...", "Discord Client", true);
             await Task.Delay(TimeSpan.FromSeconds(10));
             if (Client.ConnectionState == ConnectionState.Disconnected)
             {
@@ -312,7 +312,7 @@ namespace ATCBot
             }
             else
             {
-                Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client");
+                Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
                 lobbyHandler.ResetQueryTimer();
             }
         }

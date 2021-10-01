@@ -1,6 +1,5 @@
 using SteamKit2;
 
-using System;
 using System.Collections.Generic;
 
 namespace ATCBot.Structs
@@ -83,79 +82,59 @@ namespace ATCBot.Structs
         /// </summary>
         public int PlayerCount { get => playerCount; private set => playerCount = value; }
 
+
         /// <summary>Create a lobby from a SteamKit2 lobby.</summary>>
         public JetborneLobby(SteamMatchmaking.Lobby lobby)
         {
-            List<string> badKeys = new();
-            bool successful = true;
-            playerCount = lobby.NumMembers;
-            if (!lobby.Metadata.TryGetValue("name", out lobbyName))
+            if (!lobby.Metadata.ContainsKey("currentLap") || !lobby.Metadata.ContainsKey("ownername"))
             {
-                successful = false;
-
+                Log.LogVerbose("Skipping incomplete lobby...", "VTOL VR Lobby Constructor");
+                this = default;
+                return;
             }
+
+            List<string> badKeys = new();
+
+            playerCount = lobby.NumMembers;
+
+            if (!lobby.Metadata.TryGetValue("name", out lobbyName))
+                badKeys.Add("name");
 
             if (!lobby.Metadata.TryGetValue("ownername", out ownerName))
-            {
-                successful = false;
                 badKeys.Add("ownername");
-            }
 
             if (!lobby.Metadata.TryGetValue("currentLap", out currentLap))
-            {
-                successful = false;
                 badKeys.Add("currentLap");
-            }
 
             if (!lobby.Metadata.TryGetValue("raceLaps", out raceLaps))
-            {
-                successful = false;
                 badKeys.Add("raceLaps");
-            }
 
             if (!lobby.Metadata.TryGetValue("map", out map))
-            {
-                successful = false;
                 badKeys.Add("map");
-            }
 
             if (!lobby.Metadata.TryGetValue("leaderboardsEnabled", out leaderboardsEnabled))
-            {
-                successful = false;
                 badKeys.Add("leaderboardsEnabled");
-            }
 
             if (!lobby.Metadata.TryGetValue("blackoutMode", out blackoutMode))
-            {
-                successful = false;
                 badKeys.Add("blackoutMode");
-            }
 
             if (!lobby.Metadata.TryGetValue("gameVersion", out gameVersion))
-            {
-                successful = false;
                 badKeys.Add("gameVersion");
-            }
 
             if (!lobby.Metadata.TryGetValue("allowItems", out allowItems))
-            {
-                successful = false;
                 badKeys.Add("allowItems");
-            }
 
             if (!lobby.Metadata.TryGetValue("playerCollisions", out playerCollisions))
-            {
-                successful = false;
                 badKeys.Add("playerCollisions");
-            }
 
             if (!lobby.Metadata.TryGetValue("wallMode", out wallMode))
-            {
-                successful = false;
                 badKeys.Add("wallMode");
-            }
 
-            if (!successful) Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "JBR Lobby Constructor", true);
+            if (badKeys.Count > 0)
+            {
+                Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "JBR Lobby Constructor", true);
+                this = default;
+            }
         }
     }
 }
