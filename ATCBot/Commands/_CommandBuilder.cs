@@ -36,12 +36,12 @@ namespace ATCBot.Commands
 
             if (config.shouldBuildCommands)
             {
-                Program.LogInfo("Building slash commands, they probably won't work for the next hour!", "Slash Command Builder", true);
+                Log.LogInfo("Building slash commands, they probably won't work for the next hour!", "Slash Command Builder", true);
                 config.shouldBuildCommands = false;
             }
             else
             {
-                Program.LogDebug("Skipping building slash commands...", "Slash Command Builder");
+                Log.LogDebug("Skipping building slash commands...", "Slash Command Builder");
                 return;
             }
 
@@ -54,7 +54,7 @@ namespace ATCBot.Commands
             }
             catch (ApplicationCommandException e)
             {
-                Program.LogCritical("Could not initialize a slash command!", e, "Slash Command Builder");
+                Log.LogCritical("Could not initialize a slash command!", e, "Slash Command Builder");
                 throw;
             }
             config.shouldBuildCommands = false;

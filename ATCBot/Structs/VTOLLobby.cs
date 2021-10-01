@@ -1,5 +1,6 @@
 using SteamKit2;
 
+using System;
 using System.Collections.Generic;
 
 namespace ATCBot.Structs
@@ -21,6 +22,32 @@ namespace ATCBot.Structs
         private string briefingRoom;
         private string passwordHash;
         private int playerCount;
+
+        /// <summary>
+        /// Represents the version status of a lobby.
+        /// </summary>
+        public enum FeatureType
+        {
+            /// <summary>Main branch</summary>
+            f,
+            /// <summary>Public testing branch</summary>
+            p,
+            /// <summary>Modded version</summary>
+            m
+        }
+
+        /// <summary>
+        /// Represents the time of day of a lobby.
+        /// </summary>
+        public enum EnvType
+        {
+            /// <summary />
+            Day,
+            /// <summary />
+            Morning,
+            /// <summary />
+            Night
+        }
 
         /// <summary>
         /// The name of the lobby.
@@ -53,14 +80,14 @@ namespace ATCBot.Structs
         public int MaxPlayers { get => int.Parse(maxPlayers); private set => maxPlayers = value.ToString(); }
 
         /// <summary>
-        /// Unused.
+        /// The type of lobby - main branch, PTB, or modded.
         /// </summary>
-        public string Feature { get => feature; private set => feature = value; }
+        public FeatureType Feature { get => Enum.Parse<FeatureType>(feature); private set => feature = value.ToString(); }
 
         /// <summary>
-        /// Unused.
+        /// Whether it is day, morning, or night.
         /// </summary>
-        public int EnvIdx { get => int.Parse(envIdx); private set => envIdx = value.ToString(); }
+        public EnvType EnvIdx { get => (EnvType)int.Parse(envIdx); private set => envIdx = value.ToString(); }
 
         /// <summary>
         /// The version of the game the lobby is running.
@@ -88,24 +115,89 @@ namespace ATCBot.Structs
         {
             if(lobby.Metadata.ContainsKey("name"))
             {
-                Program.LogVerbose("Skipping modded lobby...");
+                Log.LogVerbose("Skipping modded lobby...");
                 this = default;
                 return;
             }
+            if(!lobby.Metadata.ContainsKey("scn"))
+            {
+                Log.LogVerbose("Skipping incomplete lobby...");
+                this = default;
+                return;
+            }
+
+            List<string> badKeys = new();
             bool successful = true;
+
             playerCount = lobby.NumMembers;
-            if (!lobby.Metadata.TryGetValue("lName", out lobbyName)) successful = false;
-            if (!lobby.Metadata.TryGetValue("oName", out ownerName)) successful = false;
-            if (!lobby.Metadata.TryGetValue("oId", out ownerId)) successful = false;
-            if (!lobby.Metadata.TryGetValue("scn", out scenarioName)) successful = false;
-            if (!lobby.Metadata.TryGetValue("scID", out scenarioId)) successful = false;
-            if (!lobby.Metadata.TryGetValue("maxP", out maxPlayers)) successful = false;
-            if (!lobby.Metadata.TryGetValue("feature", out feature)) successful = false;
-            if (!lobby.Metadata.TryGetValue("envIdx", out envIdx)) successful = false;
-            if (!lobby.Metadata.TryGetValue("ver", out gameVersion)) successful = false;
-            if (!lobby.Metadata.TryGetValue("brtype", out briefingRoom)) successful = false;
-            if (!lobby.Metadata.TryGetValue("pwh", out passwordHash)) successful = false;
-            if (!successful) Program.LogWarning("One or more keys could not be set correctly!", "VTOL VR Lobby Constructor", true);
+
+            if (!lobby.Metadata.TryGetValue("lName", out lobbyName))
+            {
+                successful = false;
+                badKeys.Add("lName");
+            }
+
+            if (!lobby.Metadata.TryGetValue("oName", out ownerName))
+            {
+                successful = false;
+                badKeys.Add("oName");
+            }
+
+            if (!lobby.Metadata.TryGetValue("oId", out ownerId))
+            {
+                successful = false;
+                badKeys.Add("oId");
+            }
+
+            if (!lobby.Metadata.TryGetValue("scn", out scenarioName))
+            {
+                successful = false;
+                badKeys.Add("scn");
+            }
+
+            if (!lobby.Metadata.TryGetValue("scID", out scenarioId))
+            {
+                successful = false;
+                badKeys.Add("scID");
+            }
+
+            if (!lobby.Metadata.TryGetValue("maxP", out maxPlayers))
+            {
+                successful = false;
+                badKeys.Add("maxP");
+            }
+
+            if (!lobby.Metadata.TryGetValue("feature", out feature))
+            {
+                successful = false;
+                badKeys.Add("feature");
+            }
+
+            if (!lobby.Metadata.TryGetValue("envIdx", out envIdx))
+            {
+                successful = false;
+                badKeys.Add("envIdx");
+            }
+
+            if (!lobby.Metadata.TryGetValue("ver", out gameVersion))
+            {
+                successful = false;
+                badKeys.Add("ver");
+            }
+
+            if (!lobby.Metadata.TryGetValue("brtype", out briefingRoom))
+            {
+                successful = false;
+                badKeys.Add("brtype");
+            }
+
+            if (!lobby.Metadata.TryGetValue("pwh", out passwordHash))
+            {
+                successful = false;
+                badKeys.Add("pwh");
+            }
+
+            if (!successful) Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
         }
     }
 }

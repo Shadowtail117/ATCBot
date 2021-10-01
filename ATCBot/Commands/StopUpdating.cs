@@ -29,11 +29,11 @@ namespace ATCBot.Commands
         {
             if (HasPerms(command.User))
             {
-                if (!Program.shouldUpdate)
+                if (!Program.updating)
                     return "Already not updating!";
                 else
                 {
-                    Program.shouldUpdate = false;
+                    Program.updating = false;
                     return "Stopped updating!";
                 }
             }
