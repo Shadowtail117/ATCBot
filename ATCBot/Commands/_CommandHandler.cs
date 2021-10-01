@@ -28,7 +28,7 @@ namespace ATCBot.Commands
 
                 string logMessage = $"Received slash command \"{command.Data.Name}\"{(argsAsText == "" ? "" : $" with parameters \"{argsAsText}\"")}.";
                 string logSource = $"{command.User.Username} in {command.Channel.Name}";
-                Program.Log(new Discord.LogMessage(Discord.LogSeverity.Info, logSource, logMessage), true);
+                Log.LogInfo(logMessage, logSource, true);
                 Command c = Command.AllCommands.Find(c => c.Name.Equals(command.Data.Name));
                 await command.RespondAsync(c.Action(command));
             }

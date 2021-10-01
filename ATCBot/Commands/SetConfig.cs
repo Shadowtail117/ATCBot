@@ -40,6 +40,8 @@ namespace ATCBot.Commands
                         if (successful)
                         {
                             Program.config.delay = (int)value;
+                            Log.LogInfo("Resetting query method because our delay has changed...", "SetConfig Handler", true);
+                            Program.lobbyHandler.ResetQueryTimer();
                             return $"Successfully set delay to {value} seconds!";
                         }
                         else

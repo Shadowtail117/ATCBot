@@ -32,7 +32,7 @@ namespace ATCBot
         /// The current verbosity of the logs.
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
-        public Program.LogVerbosity logVerbosity;
+        public Log.LogVerbosity logVerbosity;
 
         /// <summary>
         /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.

@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ATCBot
@@ -33,16 +34,14 @@ namespace ATCBot
 
         private CommandHandler commandHandler;
 
-        private LobbyHandler lobbyHandler;
+        internal static LobbyHandler lobbyHandler;
 
         private static bool forceDontSaveConfig = false;
-
-        private static bool warnedNoSystemChannel = false;
 
         /// <summary>
         /// Whether or not we should be updating the lobby information.
         /// </summary>
-        public static bool shouldUpdate = false;
+        public static bool updating = false;
 
         /// <summary>
         /// The current instance of the config.
@@ -58,18 +57,6 @@ namespace ATCBot
         /// Whether or not we should refresh the messages.
         /// </summary>
         public static bool shouldRefresh = false;
-
-        /// <summary>
-        /// The verbosity of logs to show.
-        /// </summary>
-        public enum LogVerbosity { 
-            /// <summary>Does not show debug or verbose logs.</summary>
-            Normal, 
-            /// <summary>Shows verbose logs but not debug logs.</summary>
-            Verbose,
-            /// <summary>Shows verbose and debug logs.</summary>
-            Debug
-        }
 
 
         static void Main(string[] args)
@@ -103,7 +90,7 @@ namespace ATCBot
             }
             catch (Exception e)
             {
-                LogCritical($"{(config.botRoleId == 0 ? "" : $"<@&{config.botRoleId}> ")}Fatal error! {e.Message}", e, "Main", true);
+                Log.LogCritical($"Fatal error! Ejecting! {e.Message}", e, "Main", true);
                 Environment.Exit(1);
             }
         }
@@ -113,141 +100,22 @@ namespace ATCBot
             Client = new DiscordSocketClient();
             Client.Log += DiscordLog;
             Client.Ready += ClientReady;
+            Client.Disconnected += OnDisconnected;
 
             await Client.LoginAsync(TokenType.Bot, config.token);
             await Client.StartAsync();
 
             lobbyHandler = new(this);
 
-            await lobbyHandler.QueryTimer();
+            _ = lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
 
-            await Task.Delay(-1);
+            while (!shouldShutdown) await Task.Delay(1000);
         }
 
         private static Task DiscordLog(LogMessage message)
         {
-            Log(message);
+            Log.LogCustom(message);
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Logs an informational message.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Info.
-        /// </remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="source">The source of the message.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogInfo(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Info, source, message), announce);
-
-        /// <summary>
-        /// Logs a warning message.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Warning.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="source">The source of the message.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogWarning(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Warning, source, message), announce);
-
-        /// <summary>
-        /// Logs an error message along with an optional exception.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Error.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="e">The exception to be logged.</param>
-        /// <param name="source">The source of the message.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogError(string message, Exception e = null, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Error, source, message, e), announce);
-
-        /// <summary>
-        /// Logs a critical error message along with an optional exception.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Critical.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="e">The exception to be logged.</param>
-        /// <param name="source">The source of the message.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogCritical(string message, Exception e = null, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Error, source, message, e), announce);
-
-        /// <summary>
-        /// Logs a debug message.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Debug.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="source">The source of the message.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogDebug(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Debug, source, message), announce);
-
-        /// <summary>
-        /// Logs a verbose message.
-        /// </summary>
-        /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Verbose.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="source">The source of the message.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogVerbose(string message, string source = "", bool announce = false) => Log(new LogMessage(LogSeverity.Verbose, source, message), announce);
-
-        /// <summary>
-        /// Logs a message.
-        /// </summary>
-        /// <remarks>Use when another logging method is not precise enough.</remarks>
-        /// <param name="message">The message to be logged.</param>
-        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void Log(LogMessage message, bool announce = false)
-        {
-            if(config.logVerbosity == LogVerbosity.Normal)
-            {
-                if (message.Severity == LogSeverity.Verbose || message.Severity == LogSeverity.Debug) return;
-            }
-            if(config.logVerbosity == LogVerbosity.Verbose)
-            {
-                if (message.Severity == LogSeverity.Debug) return;
-            }
-
-            Console.ForegroundColor = message.Severity switch
-            {
-                LogSeverity.Critical => ConsoleColor.Red,
-                LogSeverity.Error => ConsoleColor.Red,
-                LogSeverity.Warning => ConsoleColor.Yellow,
-                LogSeverity.Info => ConsoleColor.White,
-                LogSeverity.Verbose => ConsoleColor.DarkGray,
-                LogSeverity.Debug => ConsoleColor.DarkGray,
-                _ => throw new ArgumentException("Invalid severity!")
-            };
-            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}");
-            if (announce) _ = SendSystemMessage($"**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}{(message.Exception == null ? "" : $" {message.Exception.Message}")}");
-            Console.ResetColor();
-        }
-
-        /// <summary>
-        /// Send a system message to <see cref="Config.systemMessageChannelId"/> if it is set.
-        /// </summary>
-        /// <param name="s">The message to send.</param>
-        public static async Task SendSystemMessage(string s)
-        {
-            if(config.systemMessageChannelId == 0 && !warnedNoSystemChannel)
-            {
-                LogInfo("Tried announcing a message but the system channel ID is not set.");
-                warnedNoSystemChannel = true;
-                return;
-            }
-
-            var systemChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.systemMessageChannelId);
-
-            if (systemChannel == null)
-            {
-                LogWarning("Tried announcing a message but couldn't find a channel.");
-                return;
-            }
-
-            try
-            {
-                await systemChannel.SendMessageAsync(s);
-            }
-            catch (Discord.Net.HttpException e)
-            {
-                LogError("Couldn't send system message!", e);
-            }
         }
 
         /// <summary>
@@ -256,11 +124,15 @@ namespace ATCBot
         public async Task UpdateInformation()
         {
             if (!LobbyHandler.triedLoggingIn) return;
+            if (Client.ConnectionState == ConnectionState.Disconnected)
+            {
+                await OnDisconnected(default);
+            }
 
             //VTOL lobbies
             if (config.vtolLobbyChannelId == 0)
             {
-                LogWarning("VTOL Lobby Channel ID is not set!", "VTOL Embed Builder");
+                Log.LogWarning("VTOL Lobby Channel ID is not set!", "VTOL Embed Builder");
             }
             else
             {
@@ -272,7 +144,7 @@ namespace ATCBot
                     {
                         if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                         {
-                            LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                            Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
                             continue;
                         }
                         string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players";
@@ -289,7 +161,7 @@ namespace ATCBot
 
                 if (vtolChannel == null)
                 {
-                    LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
+                    Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
                     return;
                 }
 
@@ -298,12 +170,12 @@ namespace ATCBot
                     try
                     {
                         await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
-                        LogInfo("Deleted VTOL message!");
+                        Log.LogInfo("Deleted VTOL message!");
                     }
                     catch (Discord.Net.HttpException e)
                     {
-                        LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
-                        shouldUpdate = false;
+                        Log.LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
+                        updating = false;
                     }
                 }
 
@@ -315,14 +187,14 @@ namespace ATCBot
                 {
                     try
                     {
-                        LogInfo("Couldn't find existing VTOL message, making a new one...");
+                        Log.LogInfo("Couldn't find existing VTOL message, making a new one...");
                         var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
                         config.vtolLastMessageId = newMessage.Id;
                     }
                     catch (Discord.Net.HttpException e)
                     {
-                        LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
-                        shouldUpdate = false;
+                        Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
+                        updating = false;
                     }
                 }
 
@@ -331,7 +203,7 @@ namespace ATCBot
             //JBR lobbies
             if (config.jetborneLobbyChannelId == 0)
             {
-                LogWarning("JBR Lobby Channel ID is not set!", "JBR Embed Builder");
+                Log.LogWarning("JBR Lobby Channel ID is not set!", "JBR Embed Builder");
             }
             else
             {
@@ -343,7 +215,7 @@ namespace ATCBot
                     {
                         if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
                         {
-                            LogWarning("Invalid lobby state!", "JBR Embed Builder");
+                            Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
                             continue;
                         }
                         string content = $"{lobby.PlayerCount} Players\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
@@ -356,7 +228,7 @@ namespace ATCBot
 
                 if (jetborneChannel == null)
                 {
-                    LogWarning("JBR Lobby Channel ID is incorrect!", "JBR Embed Builder");
+                    Log.LogWarning("JBR Lobby Channel ID is incorrect!", "JBR Embed Builder");
                     return;
                 }
 
@@ -365,12 +237,12 @@ namespace ATCBot
                     try
                     {
                         await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
-                        LogInfo("Deleted JBR message!");
+                        Log.LogInfo("Deleted JBR message!");
                     }
                     catch (Discord.Net.HttpException e)
                     {
-                        LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
-                        shouldUpdate = false;
+                        Log.LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
+                        updating = false;
                     }
                 }
 
@@ -382,14 +254,14 @@ namespace ATCBot
                 {
                     try
                     {
-                        LogInfo("Couldn't find existing JBR message, making a new one...");
+                        Log.LogInfo("Couldn't find existing JBR message, making a new one...");
                         var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
                         config.jetborneLastMessageId = newMessage.Id;
                     }
                     catch (Discord.Net.HttpException e)
                     {
-                        LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
-                        shouldUpdate = false;
+                        Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
+                        updating = false;
                     }
                 }
 
@@ -401,10 +273,11 @@ namespace ATCBot
 
         async Task ClientReady()
         {
+            Log.LogInfo("Ready!", "Discord Client", true);
             //We check the version here so that it outputs to the system channel
             if (!await Version.CheckVersion())
             {
-                LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
+                Log.LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
                     $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
             }
 
@@ -416,7 +289,7 @@ namespace ATCBot
 
         static void OnExit(object sender, EventArgs e)
         {
-            LogInfo("Shutting down! o7", announce: true);
+            Log.LogInfo("Shutting down! o7", announce: true);
             if (forceDontSaveConfig) return;
             Console.WriteLine("------");
             if (config.shouldSave)
@@ -426,6 +299,22 @@ namespace ATCBot
             }
             else
                 Console.WriteLine("Not saving config!");
+        }
+
+        private async Task OnDisconnected(Exception e)
+        {
+            Log.LogInfo("Discord has disconnected, trying to reconnect...", "Discord Client");
+            await Task.Delay(TimeSpan.FromSeconds(10));
+            if (Client.ConnectionState == ConnectionState.Disconnected)
+            {
+                Log.LogCritical("It's been 10 seconds and we haven't reconnected! Ejecting!", e, "Discord Client");
+                Environment.Exit(1);
+            }
+            else
+            {
+                Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client");
+                lobbyHandler.ResetQueryTimer();
+            }
         }
     }
 }
