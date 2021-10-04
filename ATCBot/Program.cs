@@ -5,7 +5,6 @@ using Discord;
 using Discord.WebSocket;
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace ATCBot
@@ -58,6 +57,28 @@ namespace ATCBot
         /// </summary>
         public static bool shouldRefresh = false;
 
+        /// <summary>
+        /// Represents the current operational status of the bot.
+        /// </summary>
+        public enum Status
+        {
+            /// <summary>The bot is online.</summary>
+            Online,
+            /// <summary>The bot is offline.</summary>
+            Offline,
+            /// <summary>Custom status.</summary>
+            Custom
+        }
+
+        /// <summary>
+        /// The current status of the bot.
+        /// </summary>
+        public static Status status = Status.Online;
+
+        /// <summary>
+        /// The custom status to display to the user.
+        /// </summary>
+        public static string customStatus = config.customStatusMessage;
 
         static void Main(string[] args)
         {
@@ -79,7 +100,7 @@ namespace ATCBot
 
             if (!SteamConfig.Load())
             {
-                Console.WriteLine("Could not load Steam config. Aborting. Press any key to exit.");
+                Log.LogError("Could not load Steam config. Aborting. Press any key to exit.");
                 Console.ReadKey();
                 return;
 
@@ -109,7 +130,8 @@ namespace ATCBot
 
             _ = lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
 
-            while (!shouldShutdown) await Task.Delay(1000);
+            while (!shouldShutdown)
+                await Task.Delay(1000);
         }
 
         private static Task DiscordLog(LogMessage message)
@@ -119,154 +141,246 @@ namespace ATCBot
         }
 
         /// <summary>
+        /// Sets the status to online, offline, or a custom message.
+        /// </summary>
+        /// <param name="status">The status type of the bot.</param>
+        public static void SetStatus(Status status) => Program.status = status;
+
+        /// <summary>
+        /// Sets the status to custom and sets the custom status message.
+        /// </summary>
+        /// <param name="status">The custom message to set.</param>
+        public static void SetStatus(string status)
+        {
+            Program.status = Status.Custom;
+            customStatus = status;
+        }
+
+        /// <summary>
         /// Update the lobby information, either editing past messages or creating new ones.
         /// </summary>
         public async Task UpdateInformation()
         {
-            if (!LobbyHandler.triedLoggingIn) return;
+            if (!LobbyHandler.triedLoggingIn)
+                return;
             if (Client.ConnectionState == ConnectionState.Disconnected)
-            {
                 await OnDisconnected(default);
-            }
 
-            //VTOL lobbies
+
             if (config.vtolLobbyChannelId == 0)
-            {
                 Log.LogWarning("VTOL Lobby Channel ID is not set!", "VTOL Embed Builder");
-            }
             else
-            {
-                EmbedBuilder vtolEmbedBuilder = new();
-                vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
-                if (lobbyHandler.vtolLobbies.Count > 0)
-                {
-                    foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
-                    {
-                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
-                        {
-                            Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
-                            continue;
-                        }
-                        string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players";
-                        vtolEmbedBuilder.AddField(lobby.LobbyName, content);
-                    }
-                    if(LobbyHandler.PasswordedLobbies > 0)
-                    {
-                        vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
-                    }
-                }
-                else vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
+                await UpdateVtolMessage();
 
-                var vtolChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.vtolLobbyChannelId);
 
-                if (vtolChannel == null)
-                {
-                    Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
-                    return;
-                }
-
-                if(shouldRefresh)
-                {
-                    try
-                    {
-                        await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
-                        Log.LogInfo("Deleted VTOL message!");
-                    }
-                    catch (Discord.Net.HttpException e)
-                    {
-                        Log.LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
-                        updating = false;
-                    }
-                }
-
-                if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
-                {
-                    await vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbedBuilder.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        Log.LogInfo("Couldn't find existing VTOL message, making a new one...");
-                        var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbedBuilder.Build());
-                        config.vtolLastMessageId = newMessage.Id;
-                    }
-                    catch (Discord.Net.HttpException e)
-                    {
-                        Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
-                        updating = false;
-                    }
-                }
-
-            }
-
-            //JBR lobbies
             if (config.jetborneLobbyChannelId == 0)
-            {
                 Log.LogWarning("JBR Lobby Channel ID is not set!", "JBR Embed Builder");
+            else
+                await UpdateJetborneMessage();
+
+
+            if (config.statusMessageChannelId == 0)
+                Log.LogWarning("Status message channel ID is not set!", "Status Embed Builder");
+            else
+                await UpdateStatusMessage();
+
+            shouldRefresh = false;
+        }
+
+        private static async Task UpdateVtolMessage()
+        {
+            var vtolEmbed = CreateVtolEmbed();
+
+            var vtolChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.vtolLobbyChannelId);
+
+            if (vtolChannel == null)
+            {
+                Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
+                return;
+            }
+
+            if (shouldRefresh)
+            {
+                try
+                {
+                    await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
+                    Log.LogInfo("Deleted VTOL message!");
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
+                    updating = false;
+                }
+            }
+
+            if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
+            {
+                await vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbed.Build());
             }
             else
             {
-                EmbedBuilder jetborneEmbedBuilder = new();
-                jetborneEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
-                if (lobbyHandler.jetborneLobbies.Count > 0)
+                try
                 {
-                    foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
-                    {
-                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
-                        {
-                            Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
-                            continue;
-                        }
-                        string content = $"{lobby.PlayerCount} Players\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
-                        jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
-                    }
+                    Log.LogInfo("Couldn't find existing VTOL message, making a new one...");
+                    var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbed.Build());
+                    config.vtolLastMessageId = newMessage.Id;
                 }
-                else jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
-
-                var jetborneChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.jetborneLobbyChannelId);
-
-                if (jetborneChannel == null)
+                catch (Discord.Net.HttpException e)
                 {
-                    Log.LogWarning("JBR Lobby Channel ID is incorrect!", "JBR Embed Builder");
-                    return;
+                    Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
+                    updating = false;
                 }
-
-                if (shouldRefresh)
-                {
-                    try
-                    {
-                        await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
-                        Log.LogInfo("Deleted JBR message!");
-                    }
-                    catch (Discord.Net.HttpException e)
-                    {
-                        Log.LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
-                        updating = false;
-                    }
-                }
-
-                if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
-                {
-                    await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
-                }
-                else
-                {
-                    try
-                    {
-                        Log.LogInfo("Couldn't find existing JBR message, making a new one...");
-                        var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbedBuilder.Build());
-                        config.jetborneLastMessageId = newMessage.Id;
-                    }
-                    catch (Discord.Net.HttpException e)
-                    {
-                        Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
-                        updating = false;
-                    }
-                }
-
-                shouldRefresh = false;
             }
+        }
+
+        private static async Task UpdateJetborneMessage()
+        {
+            var jetborneEmbed = CreateJetborneEmbed();
+
+            var jetborneChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.jetborneLobbyChannelId);
+
+            if (jetborneChannel == null)
+            {
+                Log.LogWarning("JBR Lobby Channel ID is incorrect!", "JBR Embed Builder");
+                return;
+            }
+
+            if (shouldRefresh)
+            {
+                try
+                {
+                    await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
+                    Log.LogInfo("Deleted JBR message!");
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
+                    updating = false;
+                }
+            }
+
+            if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
+            {
+                await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbed.Build());
+            }
+            else
+            {
+                try
+                {
+                    Log.LogInfo("Couldn't find existing JBR message, making a new one...");
+                    var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbed.Build());
+                    config.jetborneLastMessageId = newMessage.Id;
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
+                    updating = false;
+                }
+            }
+        }
+
+        private static async Task UpdateStatusMessage()
+        {
+            var statusEmbed = CreateStatusEmbed();
+
+            var statusChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.statusMessageChannelId);
+
+            if (statusChannel == null)
+            {
+                Log.LogWarning("Status channel ID is incorrect!", "Status Embed Builder");
+                return;
+            }
+
+            if (shouldRefresh)
+            {
+                try
+                {
+                    await statusChannel.DeleteMessageAsync(config.statusLastMessageId);
+                    Log.LogInfo("Deleted JBR message!");
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't delete status message!", e, "Status Embed Builder", true);
+                    updating = false;
+                }
+            }
+
+            if (config.statusLastMessageId != 0 && await statusChannel.GetMessageAsync(config.statusLastMessageId) != null)
+            {
+                await statusChannel.ModifyMessageAsync(config.statusLastMessageId, m => m.Embed = statusEmbed.Build());
+            }
+            else
+            {
+                try
+                {
+                    Log.LogInfo("Couldn't find existing status message, making a new one...");
+                    var newMessage = await statusChannel.SendMessageAsync(embed: statusEmbed.Build());
+                    config.statusLastMessageId = newMessage.Id;
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't send status message!", e, "Status Embed Builder", true);
+                    updating = false;
+                }
+            }
+        }
+
+
+        private static EmbedBuilder CreateVtolEmbed()
+        {
+            EmbedBuilder vtolEmbedBuilder = new();
+            vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
+            if (lobbyHandler.vtolLobbies.Count > 0)
+            {
+                foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
+                {
+                    if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
+                    {
+                        Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                        continue;
+                    }
+                    string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players";
+                    vtolEmbedBuilder.AddField(lobby.LobbyName, content);
+                }
+                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+            }
+            else
+                vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
+
+            return vtolEmbedBuilder;
+        }
+
+        private static EmbedBuilder CreateJetborneEmbed()
+        {
+            EmbedBuilder jetborneEmbedBuilder = new();
+            jetborneEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
+            if (lobbyHandler.jetborneLobbies.Count > 0)
+            {
+                foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
+                {
+                    if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
+                    {
+                        Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
+                        continue;
+                    }
+                    string content = $"{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
+                    jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
+                }
+            }
+            else
+                jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
+
+            return jetborneEmbedBuilder;
+        }
+
+        private static EmbedBuilder CreateStatusEmbed() => CreateStatusEmbed(status == Status.Online ? "Online" : status == Status.Offline ? "Offline" : customStatus);
+        private static EmbedBuilder CreateStatusEmbed(string status)
+        {
+            EmbedBuilder statusEmbedBuilder = new();
+            statusEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("ATCBot Status:");
+            statusEmbedBuilder.WithDescription($"**{status}**");
+            statusEmbedBuilder.WithFooter("Note - this may not always be up to date.");
+            return statusEmbedBuilder;
         }
 
         //Event methods vvv
@@ -290,7 +404,8 @@ namespace ATCBot
         static void OnExit(object sender, EventArgs e)
         {
             Log.LogInfo("Shutting down! o7", announce: true);
-            if (forceDontSaveConfig) return;
+            if (forceDontSaveConfig)
+                return;
             Console.WriteLine("------");
             if (config.shouldSave)
             {
@@ -299,22 +414,31 @@ namespace ATCBot
             }
             else
                 Console.WriteLine("Not saving config!");
+
+            Log.SaveLog();
         }
 
-        private async Task OnDisconnected(Exception e)
+        private Task OnDisconnected(Exception e)
         {
-            Log.LogInfo("Discord has disconnected, trying to reconnect...", "Discord Client", true);
-            await Task.Delay(TimeSpan.FromSeconds(10));
-            if (Client.ConnectionState == ConnectionState.Disconnected)
+            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", true);
+            WaitForReconnect();
+
+
+            async void WaitForReconnect()
             {
-                Log.LogCritical("It's been 10 seconds and we haven't reconnected! Ejecting!", e, "Discord Client");
-                Environment.Exit(1);
+                await Task.Delay(TimeSpan.FromSeconds(10));
+                if (Client.ConnectionState == ConnectionState.Disconnected)
+                {
+                    Log.LogCritical("It's been 10 seconds and we haven't reconnected! Ejecting!", e, "Discord Client");
+                    Environment.Exit(1);
+                }
+                else
+                {
+                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
+                    lobbyHandler.ResetQueryTimer();
+                }
             }
-            else
-            {
-                Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
-                lobbyHandler.ResetQueryTimer();
-            }
+            return Task.CompletedTask;
         }
     }
 }
