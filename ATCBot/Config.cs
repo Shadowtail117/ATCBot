@@ -39,6 +39,7 @@ namespace ATCBot
         /// </summary>
         public string customStatusMessage;
 
+
         /// <summary>
         /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.
         /// </summary>
