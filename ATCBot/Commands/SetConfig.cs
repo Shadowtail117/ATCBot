@@ -20,8 +20,9 @@ namespace ATCBot.Commands
             .AddChoice("vtollobbyid", 2)
             .AddChoice("jetbornelobbyid", 3)
             .AddChoice("systemmessageid", 4)
-            .AddChoice("saveconfig", 5)
-            .AddChoice("botroleid", 6)
+            .AddChoice("statusmessageid", 5)
+            .AddChoice("saveconfig", 6)
+            .AddChoice("botroleid", 7)
             .WithType(ApplicationCommandOptionType.Integer)
         ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
 
@@ -86,6 +87,18 @@ namespace ATCBot.Commands
                         }
 
                     case 5:
+                        successful = ulong.TryParse((string) command.Data.Options.ElementAt(1).Value, out value);
+                        if (successful)
+                        {
+                            Program.config.statusMessageChannelId = value;
+                            return $"Successfully set status message channel ID to {value}!";
+                        }
+                        else
+                        {
+                            return "Sorry, I couldn't translate your input to an integer.";
+                        }
+
+                    case 6:
                         successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
                         if (successful)
                         {
@@ -102,7 +115,7 @@ namespace ATCBot.Commands
                         }
                         else return "Sorry, I couldn't translate your input to a true/false boolean.";
 
-                    case 6:
+                    case 7:
                         successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
                         if (successful)
                         {
