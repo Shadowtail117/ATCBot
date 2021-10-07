@@ -31,14 +31,7 @@ namespace ATCBot.Commands
             }
             else return u.GuildPermissions.Administrator || u.Roles.FirstOrDefault(t => t.Id == Program.config.botRoleId) != null;
         }
-        internal static bool HasPerms(SocketUser u)
-        {
-            if (u is SocketGuildUser g)
-            {
-                return HasPerms(g);
-            }
-            else return false;
-        }
+        internal static bool HasPerms(SocketUser u) => u is SocketGuildUser g && HasPerms(g);
 
         internal static bool IsOwner(SocketGuildUser u) => u.Id == Program.config.botOwnerId;
         internal static bool IsOwner(SocketUser u)

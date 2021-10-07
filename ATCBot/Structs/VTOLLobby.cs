@@ -87,7 +87,7 @@ namespace ATCBot.Structs
         /// <summary>
         /// Whether it is day, morning, or night.
         /// </summary>
-        public EnvType EnvIdx { get => (EnvType)int.Parse(envIdx); private set => envIdx = value.ToString(); }
+        public EnvType EnvIdx { get => (EnvType) int.Parse(envIdx); private set => envIdx = value.ToString(); }
 
         /// <summary>
         /// The version of the game the lobby is running.
@@ -110,94 +110,71 @@ namespace ATCBot.Structs
         /// </summary>
         public int PlayerCount { get => playerCount; private set => playerCount = value; }
 
+        /// <summary>
+        /// Whether or not this lobby is password protected.
+        /// </summary>
+        public bool PasswordProtected() => PasswordHash != 0;
+
         /// <summary>Create a lobby from a SteamKit2 lobby.</summary>
         public VTOLLobby(SteamMatchmaking.Lobby lobby)
         {
-            if(lobby.Metadata.ContainsKey("name"))
+            if (lobby.Metadata.ContainsKey("name"))
             {
-                Log.LogVerbose("Skipping modded lobby...");
+                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
-            if(!lobby.Metadata.ContainsKey("scn"))
+            if (!lobby.Metadata.ContainsKey("scn"))
             {
-                Log.LogVerbose("Skipping incomplete lobby...");
+                Log.LogVerbose("Skipping incomplete lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
 
             List<string> badKeys = new();
-            bool successful = true;
 
             playerCount = lobby.NumMembers;
 
             if (!lobby.Metadata.TryGetValue("lName", out lobbyName))
-            {
-                successful = false;
                 badKeys.Add("lName");
-            }
 
             if (!lobby.Metadata.TryGetValue("oName", out ownerName))
-            {
-                successful = false;
                 badKeys.Add("oName");
-            }
 
             if (!lobby.Metadata.TryGetValue("oId", out ownerId))
-            {
-                successful = false;
                 badKeys.Add("oId");
-            }
 
             if (!lobby.Metadata.TryGetValue("scn", out scenarioName))
-            {
-                successful = false;
                 badKeys.Add("scn");
-            }
 
             if (!lobby.Metadata.TryGetValue("scID", out scenarioId))
-            {
-                successful = false;
                 badKeys.Add("scID");
-            }
 
             if (!lobby.Metadata.TryGetValue("maxP", out maxPlayers))
-            {
-                successful = false;
                 badKeys.Add("maxP");
-            }
 
             if (!lobby.Metadata.TryGetValue("feature", out feature))
-            {
-                successful = false;
                 badKeys.Add("feature");
-            }
 
             if (!lobby.Metadata.TryGetValue("envIdx", out envIdx))
-            {
-                successful = false;
                 badKeys.Add("envIdx");
-            }
 
             if (!lobby.Metadata.TryGetValue("ver", out gameVersion))
-            {
-                successful = false;
                 badKeys.Add("ver");
-            }
 
             if (!lobby.Metadata.TryGetValue("brtype", out briefingRoom))
-            {
-                successful = false;
                 badKeys.Add("brtype");
-            }
 
             if (!lobby.Metadata.TryGetValue("pwh", out passwordHash))
-            {
-                successful = false;
                 badKeys.Add("pwh");
-            }
 
-            if (!successful) Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
+            if (badKeys.Count > 0)
+            {
+                Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
+                this = default;
+            }
+            Log.LogDebug($"Found VTOL Lobby | Name: {LobbyName} , Owner: {OwnerName} , Scenario: {ScenarioName} , Players: {PlayerCount}/{MaxPlayers} , PP: {PasswordProtected()}",
+                "VTOL VR Lobby Constructor");
         }
     }
 }

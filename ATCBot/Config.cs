@@ -35,6 +35,17 @@ namespace ATCBot
         public Log.LogVerbosity logVerbosity;
 
         /// <summary>
+        /// The custom status message to be saved between sessions.
+        /// </summary>
+        public string customStatusMessage;
+
+        /// <summary>
+        /// The last status message of the program, used to determine what to set upon restarting.
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Program.Status status;
+
+        /// <summary>
         /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.
         /// </summary>
         public ulong botRoleId;
@@ -63,6 +74,16 @@ namespace ATCBot
         /// The Discord message ID of the last Jetborne lobby information posting.
         /// </summary>
         public ulong jetborneLastMessageId;
+
+        /// <summary>
+        /// The Discord channel ID to post status messages to.
+        /// </summary>
+        public ulong statusMessageChannelId;
+
+        /// <summary>
+        /// The Discord message ID of the last status message.
+        /// </summary>
+        public ulong statusLastMessageId;
 
         /// <summary>
         /// The Discord channel ID to send system messages to.

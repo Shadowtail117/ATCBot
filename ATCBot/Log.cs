@@ -3,6 +3,8 @@ using Discord;
 using Discord.WebSocket;
 
 using System;
+using System.IO;
+using System.Text;
 
 using System.Threading.Tasks;
 
@@ -18,6 +20,12 @@ namespace ATCBot
         private static Config config = Program.config;
 
         /// <summary>
+        /// Holds all logs for dumping purposes.
+        /// </summary>
+        /// <remarks>Stores ALL logs regardless of verbosity settings.</remarks>
+        public static StringBuilder AggregateLog { get; private set; } = new();
+
+        /// <summary>
         /// The verbosity of logs to show.
         /// </summary>
         public enum LogVerbosity
@@ -30,6 +38,38 @@ namespace ATCBot
             Debug
         }
 
+        private static readonly string directory = Directory.GetCurrentDirectory();
+        private static readonly string saveDirectory = Path.Combine(directory, @"Log");
+        private static string SaveFilePath
+        {
+            get
+            {
+                DateTime date = DateTime.Now;
+                return Path.Combine(saveDirectory, $"Log {date.Month} {date.Day} {date.Year}  {date.Hour} {date.Minute}.txt");
+            }
+        }
+
+
+        /// <summary>
+        /// Saves <see cref="AggregateLog"/> to disk.
+        /// </summary>
+        public static void SaveLog()
+        {
+            LogInfo($"Dumping logs to \"{SaveFilePath}\".");
+            if (!Directory.Exists(saveDirectory))
+                Directory.CreateDirectory(saveDirectory);
+            File.WriteAllText(SaveFilePath, AggregateLog.ToString());
+        }
+
+        /// <summary>
+        /// Logs a blank line to the console for ease of reading.
+        /// </summary>
+        public static void LogBlank()
+        {
+            Console.WriteLine();
+            AggregateLog.AppendLine();
+        }
+
         /// <summary>
         /// Logs a message.
         /// </summary>
@@ -38,13 +78,18 @@ namespace ATCBot
         /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
         public static void LogCustom(LogMessage message, bool announce = false)
         {
+            string output = $"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}";
+            AggregateLog.AppendLine(output);
+
             if (config.logVerbosity == LogVerbosity.Normal)
             {
-                if (message.Severity == LogSeverity.Verbose || message.Severity == LogSeverity.Debug) return;
+                if (message.Severity == LogSeverity.Verbose || message.Severity == LogSeverity.Debug)
+                    return;
             }
             if (config.logVerbosity == LogVerbosity.Verbose)
             {
-                if (message.Severity == LogSeverity.Debug) return;
+                if (message.Severity == LogSeverity.Debug)
+                    return;
             }
 
             Console.ForegroundColor = message.Severity switch
@@ -57,8 +102,9 @@ namespace ATCBot
                 LogSeverity.Debug => ConsoleColor.DarkGray,
                 _ => throw new ArgumentException("Invalid severity!")
             };
-            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}");
-            if (announce) _ = SendSystemMessage($"{(config.botRoleId != 0 && message.Severity == LogSeverity.Critical ? $"<@&{config.botRoleId}> - " : "")}**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}{(message.Exception == null ? "" : $" {message.Exception.Message}")}");
+            Console.WriteLine(output);
+            if (announce)
+                _ = SendSystemMessage($"{(config.botRoleId != 0 && message.Severity == LogSeverity.Critical ? $"<@&{config.botRoleId}> - " : "")}**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}{(message.Exception == null ? "" : $" {message.Exception.Message}")}");
             Console.ResetColor();
         }
 
@@ -132,7 +178,7 @@ namespace ATCBot
                 return;
             }
 
-            var systemChannel = (ISocketMessageChannel)await Program.Client.GetChannelAsync(config.systemMessageChannelId);
+            var systemChannel = (ISocketMessageChannel) await Program.Client.GetChannelAsync(config.systemMessageChannelId);
 
             if (systemChannel == null)
             {
