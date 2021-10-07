@@ -5,7 +5,7 @@ ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetc
 
 ## Design
 
-ATCBot will publish lobby information using a singular message per game, preferably within its own channel(s) on the server. It will fetch lobby information continuously except when told to stop, and will wait a variable amount of time per second based on the configuration that it is running.
+ATCBot will publish lobby information using a singular message per game, preferably within its own channel(s) on the server, as well as a message depicting its current status. It will fetch lobby information continuously except when told to stop, and will wait a variable amount of time between updates based on the configuration that it is running.
 
 Most variables of the bot are changeable using slash commands. See below.
 
@@ -26,7 +26,7 @@ ATCBot currently features the following commands:
 | `rebuildcommands`  | None                                                                                                                                             | Forces the bot to rebuild slash commands.             | Bot Owner            |
 | `setlogverbosity`  | `verbosity`: The verbosity to set.                                                                                                               | Sets the verbosity of logs/system messages.           | Bot Owner            |
 
-#### Bot Role
+### Bot Role
 "Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
 
 If the bot role is set, then the bot will check if the user either has that role, or has Administrator permissions.
@@ -42,7 +42,7 @@ Valid arguments for `getconfig`:
 - `systemmessageid` - The channel ID set for the bot to post system messages.
 - `botroleid` - The role ID set for the bot to check permission to use restricted commands.
 
-### setconfig
+#### setconfig
 Valid arguments for `setconfig`'s first parameter:
 - `delay` - The delay **in seconds** between updates to the lobby messages, on top of network processing times.
 - `vtolchannelid` - The channel ID set for the bot to post VTOL VR lobby information.
@@ -53,11 +53,17 @@ Valid arguments for `setconfig`'s first parameter:
 
 The second argument for `setconfig` is any text. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, `jetbornechannelid`, and `systemmessageid`, and a boolean for `saveconfig`.
 
-### setlogverbosity
+#### setlogverbosity
 Valid arguments for `setlogverbosity`:
 - `normal` - Displays only informational, warning, error, and critical messages. Does not display verbose or debug messages.
 - `verbose` - Displays informational, warning, error, critical, and verbose messages. Does not display debug messages.
 - `debug` - Displays all messages.
+
+#### setstatusmessage
+
+Sets the content of the bot's status message. If set to `Online` or `Offline`, the message's content will be just that. Additionally, it will automatically try to change to `Offline` when shutting down and `Online` when starting up.
+
+If `Custom` is selected, a custom status message will be displayed instead and will remain until changed, even after shutting down and restarting the bot.
 
 ## Hosting
 
