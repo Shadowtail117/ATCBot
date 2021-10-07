@@ -1,4 +1,4 @@
-# ATCBot v1.3.1
+# ATCBot v1.3.2
 [![Build](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
@@ -13,17 +13,18 @@ Most variables of the bot are changeable using slash commands. See below.
 
 ATCBot currently features the following commands:
 
-| Command           | Parameters                                                        | Description                                           | Permissions Required |
-| ----------------- | ----------------------------------------------------------------- | ----------------------------------------------------- | -------------------- |
-| `version`         | None                                                              | Gets the local version of the bot, as updated by me.  | None                 |
-| `startupdating`   | None                                                              | Starts updating the lobby information.                | Bot Role             |
-| `stopupdating`    | None                                                              | Stops updating the lobby information.                 | Bot Role             |
-| `getconfig`       | `config`: The config item to get.                                 | Gets the value of a config item.                      | Bot Role             |
-| `setconfig`       | `config`: The config item to set.<br/>`value`: The value to set.  | Sets the value of a config item.                      | Bot Role             |
-| `shutdown`        | None                                                              | Shuts down the bot. Requires a manual restart.        | Bot Role             |
-| `refresh`         | None                                                              | Forces the bot to replace old messages with new ones. | Bot Role             |
-| `rebuildcommands` | None                                                              | Forces the bot to rebuild slash commands.             | Bot Owner            |
-| `setlogverbosity` | `verbosity`: The verbosity to set.                                | Sets the verbosity of logs/system messages.           | Bot Owner            |
+| Command            | Parameters                                                                                                                                       | Description                                           | Permissions Required |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | -------------------- |
+| `version`          | None                                                                                                                                             | Gets the local version of the bot, as updated by me.  | None                 |
+| `startupdating`    | None                                                                                                                                             | Starts updating the lobby information.                | Bot Role             |
+| `stopupdating`     | None                                                                                                                                             | Stops updating the lobby information.                 | Bot Role             |
+| `getconfig`        | `config`: The config item to get.                                                                                                                | Gets the value of a config item.                      | Bot Role             |
+| `setconfig`        | `config`: The config item to set.<br/>`value`: The value to set.                                                                                 | Sets the value of a config item.                      | Bot Role             |
+| `shutdown`         | None                                                                                                                                             | Shuts down the bot. Requires a manual restart.        | Bot Role             |
+| `refresh`          | None                                                                                                                                             | Forces the bot to replace old messages with new ones. | Bot Role             |
+| `setstatusmessage` | `status`: The type of status, either online, offline, or custom.<br/>`custommessage`: If `status` was set to custom, the custom message to show. | Changes the status message of the bot, if set.        | Bot Role             |
+| `rebuildcommands`  | None                                                                                                                                             | Forces the bot to rebuild slash commands.             | Bot Owner            |
+| `setlogverbosity`  | `verbosity`: The verbosity to set.                                                                                                               | Sets the verbosity of logs/system messages.           | Bot Owner            |
 
 #### Bot Role
 "Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
