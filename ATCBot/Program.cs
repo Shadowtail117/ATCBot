@@ -71,16 +71,6 @@ namespace ATCBot
             Custom
         }
 
-        /// <summary>
-        /// The current status of the bot.
-        /// </summary>
-        public static Status status = Status.Online;
-
-        /// <summary>
-        /// The custom status to display to the user.
-        /// </summary>
-        public static string customStatus = config.customStatusMessage;
-
         static void Main(string[] args)
         {
             //Stuff to set up the console
@@ -145,7 +135,7 @@ namespace ATCBot
         /// Sets the status to online, offline, or a custom message.
         /// </summary>
         /// <param name="status">The status type of the bot.</param>
-        public static void SetStatus(Status status) => Program.status = status;
+        public static void SetStatus(Status status) => config.status = status;
 
         /// <summary>
         /// Sets the status to custom and sets the custom status message.
@@ -153,8 +143,8 @@ namespace ATCBot
         /// <param name="status">The custom message to set.</param>
         public static void SetStatus(string status)
         {
-            Program.status = Status.Custom;
-            customStatus = status;
+            config.status = Status.Custom;
+            config.customStatusMessage = status;
         }
 
         /// <summary>
@@ -188,7 +178,10 @@ namespace ATCBot
             shouldRefresh = false;
         }
 
-        private static async Task UpdateVtolMessage()
+        /// <summary>
+        /// Updates the VTOL VR lobby message once.
+        /// </summary>
+        public static async Task UpdateVtolMessage()
         {
             var vtolEmbed = CreateVtolEmbed();
 
@@ -234,7 +227,10 @@ namespace ATCBot
             }
         }
 
-        private static async Task UpdateJetborneMessage()
+        /// <summary>
+        /// Updates the JBR lobby message once.
+        /// </summary>
+        public static async Task UpdateJetborneMessage()
         {
             var jetborneEmbed = CreateJetborneEmbed();
 
@@ -280,7 +276,10 @@ namespace ATCBot
             }
         }
 
-        private static async Task UpdateStatusMessage()
+        /// <summary>
+        /// Updates the status message once.
+        /// </summary>
+        public static async Task UpdateStatusMessage()
         {
             var statusEmbed = CreateStatusEmbed();
 
@@ -374,7 +373,7 @@ namespace ATCBot
             return jetborneEmbedBuilder;
         }
 
-        private static EmbedBuilder CreateStatusEmbed() => CreateStatusEmbed(status == Status.Online ? "Online" : status == Status.Offline ? "Offline" : customStatus);
+        private static EmbedBuilder CreateStatusEmbed() => CreateStatusEmbed(config.status == Status.Online ? "Online" : config.status == Status.Offline ? "Offline" : config.customStatusMessage);
         private static EmbedBuilder CreateStatusEmbed(string status)
         {
             EmbedBuilder statusEmbedBuilder = new();
@@ -397,13 +396,26 @@ namespace ATCBot
             }
 
             commandHandler = new();
+
             commandBuilder = new(Client);
             Client.InteractionCreated += commandHandler.ClientInteractionCreated;
             await commandBuilder.BuildCommands();
+
+            //Since this is loaded straight from config at this point, a status of offline means that the bot closed naturally without a custom message
+            if (config.status == Status.Offline)
+            {
+                SetStatus(Status.Online);
+                await UpdateStatusMessage();
+            }
         }
 
         static void OnExit(object sender, EventArgs e)
         {
+            if (config.status != Status.Custom)
+            {
+                SetStatus(Status.Offline);
+            }
+
             Log.LogInfo("Shutting down! o7", announce: true);
             if (forceDontSaveConfig)
                 return;
@@ -415,6 +427,15 @@ namespace ATCBot
             }
             else
                 Console.WriteLine("Not saving config!");
+
+            try
+            {
+                UpdateStatusMessage().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Log.LogError("Couldn't set status to offline before quitting!", ex);
+            }
 
             Log.SaveLog();
         }

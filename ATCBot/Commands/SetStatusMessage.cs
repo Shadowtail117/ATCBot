@@ -48,14 +48,15 @@ namespace ATCBot.Commands
                         Program.SetStatus(Program.Status.Custom);
                         break;
                 }
-                output = "Successfully set status to " + Program.status;
+                output = "Successfully set status to " + Program.config.status;
 
                 if(command.Data.Options.Count > 1 && command.Data.Options.ElementAt(1).Value != null)
                 {
                     string custom = Convert.ToString(command.Data.Options.ElementAt(1).Value);
-                    Program.customStatus = custom;
+                    Program.config.customStatusMessage = custom;
                     output += $" and custom status message to \"{custom}\"";
                 }
+                _ = Program.UpdateStatusMessage();
                 return output + "!";
             }
             else return "Sorry, you don't have the permissions to use this command!";

@@ -39,6 +39,11 @@ namespace ATCBot
         /// </summary>
         public string customStatusMessage;
 
+        /// <summary>
+        /// The last status message of the program, used to determine what to set upon restarting.
+        /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Program.Status status;
 
         /// <summary>
         /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.
