@@ -110,6 +110,11 @@ namespace ATCBot.Structs
         /// </summary>
         public int PlayerCount { get => playerCount; private set => playerCount = value; }
 
+        /// <summary>
+        /// Whether or not this lobby is password protected.
+        /// </summary>
+        public bool PasswordProtected() => PasswordHash != 0;
+
         /// <summary>Create a lobby from a SteamKit2 lobby.</summary>
         public VTOLLobby(SteamMatchmaking.Lobby lobby)
         {
@@ -168,6 +173,8 @@ namespace ATCBot.Structs
                 Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
                 this = default;
             }
+            Log.LogDebug($"Found VTOL Lobby | Name: {LobbyName} , Owner: {OwnerName} , Scenario: {ScenarioName} , Players: {PlayerCount}/{MaxPlayers} , PP: {PasswordProtected()}",
+                "VTOL VR Lobby Constructor");
         }
     }
 }

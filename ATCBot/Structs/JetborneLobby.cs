@@ -135,6 +135,7 @@ namespace ATCBot.Structs
                 Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "JBR Lobby Constructor", true);
                 this = default;
             }
+            Log.LogDebug($"Found JBR Lobby | Name: {LobbyName} , Owner: {OwnerName} , Map: {Map} , Players: {PlayerCount}", "JBR Lobby Constructor");
         }
     }
 }

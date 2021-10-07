@@ -25,7 +25,8 @@ namespace ATCBot.Commands
             .AddChoice("vtolchannelid", 3)
             .AddChoice("jetbornechannelid", 4)
             .AddChoice("systemmessageid", 5)
-            .AddChoice("botroleid", 6)
+            .AddChoice("statusmessageid", 6)
+            .AddChoice("botroleid", 7)
             .WithType(ApplicationCommandOptionType.Integer)
         );
 
@@ -40,7 +41,8 @@ namespace ATCBot.Commands
                     3 => Program.config.vtolLobbyChannelId.ToString(),
                     4 => Program.config.jetborneLobbyChannelId.ToString(),
                     5 => Program.config.systemMessageChannelId.ToString(),
-                    6 => Program.config.botRoleId.ToString(),
+                    6 => Program.config.statusMessageChannelId.ToString(),
+                    7 => Program.config.botRoleId.ToString(),
                     _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\""),
                 };
             }
