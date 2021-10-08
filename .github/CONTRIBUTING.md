@@ -52,3 +52,5 @@ ATCBot's code style is flexible, and a comprehensive, rigid list of all necessar
 ## Creating an issue/pull request
 
 When creating an issue or pull request, please explain the problem/suggestion (if an issue) or the changes you have made (if a pull request). PRs should have all changes documented, no matter how small! Failure to do so will result in frowny faces.
+
+**Important!** All pull requests should be atomized, meaning they aim to accomplish one specific task. Don't make a PR changing two unrelated things at once (for example, adding a slash command while also refactoring the way Config.cs is written); make two separate PRs.
