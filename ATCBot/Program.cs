@@ -330,7 +330,7 @@ namespace ATCBot
         {
             EmbedBuilder vtolEmbedBuilder = new();
             vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
-            if (lobbyHandler.vtolLobbies.Count > 0)
+            if (lobbyHandler.vtolLobbies.Count - LobbyHandler.PasswordedLobbies > 0)
             {
                 foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()))
                 {
@@ -344,8 +344,13 @@ namespace ATCBot
                 }
                 vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
             }
+            else if (LobbyHandler.PasswordedLobbies > 0)
+            {
+                vtolEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
+                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+            }
             else
-                vtolEmbedBuilder.AddField($"No {(LobbyHandler.PasswordedLobbies > 0 ? "public " : "")}lobbies!", "Check back later!");
+                vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
 
             return vtolEmbedBuilder;
         }
