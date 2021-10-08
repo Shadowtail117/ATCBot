@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ATCBot
@@ -331,7 +332,7 @@ namespace ATCBot
             vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
             if (lobbyHandler.vtolLobbies.Count > 0)
             {
-                foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies)
+                foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()))
                 {
                     if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                     {
@@ -344,7 +345,7 @@ namespace ATCBot
                 vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
             }
             else
-                vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
+                vtolEmbedBuilder.AddField($"No {(LobbyHandler.PasswordedLobbies > 0 ? "public " : "")}lobbies!", "Check back later!");
 
             return vtolEmbedBuilder;
         }
