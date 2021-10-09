@@ -407,6 +407,8 @@ namespace ATCBot
                 SetStatus(Status.Online);
                 await UpdateStatusMessage();
             }
+
+            Watchdog.Start();
         }
 
         static void OnExit(object sender, EventArgs e)

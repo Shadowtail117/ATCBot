@@ -53,6 +53,7 @@ namespace ATCBot
                 manager.RunWaitCallbacks(TimeSpan.FromSeconds(Program.config.steamTimeout));
                 await GetLobbies();
                 await program.UpdateInformation();
+                Watchdog.lastUpdate = DateTime.Now;
             }
             else if (triedLoggingIn) Log.LogInfo("Skipping update...", "Lobby Handler");
             await Task.Delay(TimeSpan.FromSeconds(Program.config.delay), token);
