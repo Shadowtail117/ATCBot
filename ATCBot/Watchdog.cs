@@ -41,7 +41,7 @@ namespace ATCBot
                 skippedBeats++;
                 switch (skippedBeats)
                 {
-                    case int n when n < 4:
+                    case int n when n < 5:
                         Log.LogWarning($"Watchdog detected a skipped heartbeat! This is the {AddOrdinal(n)} time in a row!", "Watchdog");
                         break;
                     default:

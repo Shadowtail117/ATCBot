@@ -116,7 +116,7 @@ namespace ATCBot
         /// <param name="e">The exception to be logged.</param>
         /// <param name="source">The source of the message.</param>
         /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
-        public static void LogCritical(string message, Exception e = null, string source = "", bool announce = true) => LogCustom(new LogMessage(LogSeverity.Error, source, message, e), announce);
+        public static void LogCritical(string message, Exception e = null, string source = "", bool announce = true) => LogCustom(new LogMessage(LogSeverity.Critical, source, message, e), announce);
 
         /// <summary>
         /// Logs a debug message.
