@@ -20,7 +20,7 @@ namespace ATCBot.Commands
             if (arg is SocketSlashCommand command)
             {
                 string argsAsText = "";
-                if (!(command.Data.Options == null))
+                if (!(command.Data.Options == null) && command.Data.Options.Count > 0)
                 {
                     foreach (var option in command.Data.Options) argsAsText += option.Value.ToString() + ", ";
                     argsAsText = argsAsText[0..^2];

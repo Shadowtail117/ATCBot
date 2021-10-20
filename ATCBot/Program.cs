@@ -16,6 +16,11 @@ namespace ATCBot
     public class Program
     {
         /// <summary>
+        /// The current instance of the program.
+        /// </summary>
+        public static Program program;
+
+        /// <summary>
         /// The Steam game ID of VTOL VR.
         /// </summary>
         public const int vtolID = 667970;
@@ -98,7 +103,8 @@ namespace ATCBot
             }
             try
             {
-                new Program().MainAsync().GetAwaiter().GetResult();
+                program = new Program();
+                program.MainAsync().GetAwaiter().GetResult();
             }
             catch (Exception e)
             {
@@ -382,7 +388,8 @@ namespace ATCBot
         private static EmbedBuilder CreateStatusEmbed(string status)
         {
             EmbedBuilder statusEmbedBuilder = new();
-            statusEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("ATCBot Status:");
+            statusEmbedBuilder.WithColor(config.status == Status.Online ? Color.DarkGreen : config.status == Status.Offline ? Color.DarkRed : Color.DarkGrey);
+            statusEmbedBuilder.WithCurrentTimestamp().WithTitle("ATCBot Status:");
             statusEmbedBuilder.WithDescription($"**{status}**");
             statusEmbedBuilder.WithFooter("Note - this may not always be up to date.");
             return statusEmbedBuilder;

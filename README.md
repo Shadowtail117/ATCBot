@@ -1,4 +1,4 @@
-# ATCBot v1.4.0p1
+# ATCBot v1.4.0p2
 
 [![Build](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml)
 
