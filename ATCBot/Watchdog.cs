@@ -8,6 +8,8 @@ namespace ATCBot
     /// </summary>
     internal static class Watchdog
     {
+        private static Program program;
+
         private static double waitTime;
 
         public static DateTime lastUpdate;
@@ -18,9 +20,12 @@ namespace ATCBot
 
         public static void Start()
         {
+            program = Program.program;
             waitTime = Program.config.delay;
             timer = new(CheckStatus, null, TimeSpan.FromSeconds(waitTime), TimeSpan.FromSeconds(waitTime));
         }
+
+        private static bool triedRestart;
 
         private static void CheckStatus(object info)
         {
@@ -45,9 +50,24 @@ namespace ATCBot
                         Log.LogWarning($"Watchdog detected a skipped heartbeat! This is the {AddOrdinal(n)} time in a row!", "Watchdog");
                         break;
                     default:
-                        Log.LogCritical($"Watchdog has detected a skipped heartbeat for the 5th time in a row! Pulling the plug!", source: "Watchdog");
-                        Environment.Exit(2);
-                        break;
+                        {
+                            if (triedRestart)
+                            {
+                                Log.LogCritical($"Watchdog has detected a skipped heartbeat for the 5th time in a row and reviving did not work! Pulling the plug!", source: "Watchdog");
+                                Environment.Exit(2);
+                                break;
+                            }
+                            else
+                            {
+                                Log.LogError($"Watchdog has detected a skipped heartbeat for the 5th time in a row! Trying to revive the query timer...", source: "Watchdog", announce: true);
+                                Program.lobbyHandler = new(program);
+                                _ = Program.lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
+                                Program.lobbyHandler.ResetQueryTimer();
+                                skippedBeats = 0;
+                                triedRestart = true;
+                                break;
+                            }
+                        }
                 }
             }
             else
