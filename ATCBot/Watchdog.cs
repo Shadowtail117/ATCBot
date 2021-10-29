@@ -41,7 +41,7 @@ namespace ATCBot
                 return;
             }
 
-            if (DateTime.Now - lastUpdate > TimeSpan.FromSeconds(waitTime))
+            if (DateTime.Now - lastUpdate > TimeSpan.FromSeconds(waitTime) * 2) //We wait 2 full cycles to negate any possible latency issues that would cause it to be counted as a miss
             {
                 skippedBeats++;
                 switch (skippedBeats)
