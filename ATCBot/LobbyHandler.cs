@@ -40,7 +40,11 @@ namespace ATCBot
         /// </summary>
         public static bool triedLoggingIn;
 
-        private SteamClient client;
+        /// <summary>
+        /// The Steam client currently in use.
+        /// </summary>
+        public SteamClient client;
+
         private CallbackManager manager;
         private SteamUser user;
         private SteamMatchmaking matchmaking;
