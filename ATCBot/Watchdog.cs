@@ -41,7 +41,7 @@ namespace ATCBot
                 return;
             }
 
-            if (DateTime.Now - lastUpdate > TimeSpan.FromSeconds(waitTime))
+            if (DateTime.Now - lastUpdate > TimeSpan.FromSeconds(waitTime) * 2) //We wait 2 full cycles to negate any possible latency issues that would cause it to be counted as a miss
             {
                 skippedBeats++;
                 switch (skippedBeats)
@@ -60,6 +60,7 @@ namespace ATCBot
                             else
                             {
                                 Log.LogError($"Watchdog has detected a skipped heartbeat for the 5th time in a row! Trying to revive the query timer...", source: "Watchdog", announce: true);
+                                Program.lobbyHandler.client.Disconnect();
                                 Program.lobbyHandler = new(program);
                                 _ = Program.lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
                                 Program.lobbyHandler.ResetQueryTimer();
