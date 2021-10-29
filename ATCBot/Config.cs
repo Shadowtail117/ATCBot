@@ -35,6 +35,11 @@ namespace ATCBot
         public Log.LogVerbosity logVerbosity;
 
         /// <summary>
+        /// Whether or not to automatically begin queries when the Discord client is ready.
+        /// </summary>
+        public bool autoQuery;
+
+        /// <summary>
         /// The custom status message to be saved between sessions.
         /// </summary>
         public string customStatusMessage;
