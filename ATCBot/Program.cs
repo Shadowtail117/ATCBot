@@ -345,10 +345,11 @@ namespace ATCBot
                         Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
                         continue;
                     }
-                    string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players";
+                    string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
                     vtolEmbedBuilder.AddField(lobby.LobbyName, content);
                 }
-                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                if(LobbyHandler.PasswordedLobbies > 0)
+                    vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
             }
             else if (LobbyHandler.PasswordedLobbies > 0)
             {
