@@ -27,6 +27,7 @@ namespace ATCBot.Commands
             .AddChoice("systemmessageid", 5)
             .AddChoice("statusmessageid", 6)
             .AddChoice("botroleid", 7)
+            .AddChoice("autoquery", 8)
             .WithType(ApplicationCommandOptionType.Integer)
         );
 
@@ -43,6 +44,7 @@ namespace ATCBot.Commands
                     5 => Program.config.systemMessageChannelId.ToString(),
                     6 => Program.config.statusMessageChannelId.ToString(),
                     7 => Program.config.botRoleId.ToString(),
+                    8 => Program.config.autoQuery.ToString(),
                     _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\""),
                 };
             }

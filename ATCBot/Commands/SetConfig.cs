@@ -23,6 +23,7 @@ namespace ATCBot.Commands
             .AddChoice("statusmessageid", 5)
             .AddChoice("saveconfig", 6)
             .AddChoice("botroleid", 7)
+            .AddChoice("autoquery", 8)
             .WithType(ApplicationCommandOptionType.Integer)
         ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
 
@@ -126,6 +127,18 @@ namespace ATCBot.Commands
                         {
                             return "Sorry, I couldn't translate your input to an integer.";
                         }
+
+                    case 8:
+                        successful = bool.TryParse((string) command.Data.Options.ElementAt(1).Value, out boolValue);
+                        if (successful)
+                        {
+                            Program.config.autoQuery = boolValue;
+                            return $"Successfully {(boolValue ? "enabled" : "disabled")} autoquery!";
+                        }
+                        else
+                        {
+                            return "Sorry, I couldn't translate your input to a true/false boolean.";
+                        } 
 
                     default: throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"");
                 }

@@ -421,6 +421,12 @@ namespace ATCBot
             }
 
             Watchdog.Start();
+
+            if(config.autoQuery)
+            {
+                Log.LogInfo("Autoquery is enabled, beginning queries.", announce: true);
+                updating = true;
+            }
         }
 
         static void OnExit(object sender, EventArgs e)
