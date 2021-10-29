@@ -1,4 +1,4 @@
-# ATCBot v1.4.0p2
+# ATCBot v1.4.0p3
 
 [![Build](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml)
 
@@ -42,7 +42,8 @@ Valid arguments for `getconfig`:
 - `jetbornechannelid` - The channel ID set for the bot to post Jetborne Racing lobby information.
 - `systemmessageid` - The channel ID set for the bot to post system messages.
 - `botroleid` - The role ID set for the bot to check permission to use restricted commands.
-
+- `autoquery` - Whether or not the bot will immediately begin lobby queries when it is ready.
+- 
 #### setconfig
 Valid arguments for `setconfig`'s first parameter:
 - `delay` - The delay **in seconds** between updates to the lobby messages, on top of network processing times.
@@ -51,7 +52,8 @@ Valid arguments for `setconfig`'s first parameter:
 - `systemmessageid` - The channel ID set for the bot to post system messages.
 - `saveconfig` - Whether or not the configuration will be saved upon exiting. Defaults to true every time.
 - `botroleid` - The role ID set for the bot to check permission to use restricted commands.
-
+- `autoquery` - Whether or not the bot will immediately begin lobby queries when it is ready.
+- 
 The second argument for `setconfig` is any text. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, `jetbornechannelid`, and `systemmessageid`, and a boolean for `saveconfig`.
 
 #### setlogverbosity
