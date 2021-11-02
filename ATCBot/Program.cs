@@ -59,11 +59,6 @@ namespace ATCBot
         public static bool shouldShutdown = false;
 
         /// <summary>
-        /// Whether or not we should refresh the messages.
-        /// </summary>
-        public static bool shouldRefresh = false;
-
-        /// <summary>
         /// Represents the current operational status of the bot.
         /// </summary>
         public enum Status
@@ -180,8 +175,6 @@ namespace ATCBot
                 Log.LogWarning("Status message channel ID is not set!", "Status Embed Builder");
             else
                 await UpdateStatusMessage();
-
-            shouldRefresh = false;
         }
 
         /// <summary>
@@ -197,20 +190,6 @@ namespace ATCBot
             {
                 Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
                 return;
-            }
-
-            if (shouldRefresh)
-            {
-                try
-                {
-                    await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
-                    Log.LogInfo("Deleted VTOL message!");
-                }
-                catch (Discord.Net.HttpException e)
-                {
-                    Log.LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
-                    updating = false;
-                }
             }
 
             if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
@@ -248,20 +227,6 @@ namespace ATCBot
                 return;
             }
 
-            if (shouldRefresh)
-            {
-                try
-                {
-                    await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
-                    Log.LogInfo("Deleted JBR message!");
-                }
-                catch (Discord.Net.HttpException e)
-                {
-                    Log.LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
-                    updating = false;
-                }
-            }
-
             if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
             {
                 await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbed.Build());
@@ -295,20 +260,6 @@ namespace ATCBot
             {
                 Log.LogWarning("Status channel ID is incorrect!", "Status Embed Builder");
                 return;
-            }
-
-            if (shouldRefresh)
-            {
-                try
-                {
-                    await statusChannel.DeleteMessageAsync(config.statusLastMessageId);
-                    Log.LogInfo("Deleted JBR message!");
-                }
-                catch (Discord.Net.HttpException e)
-                {
-                    Log.LogError("Couldn't delete status message!", e, "Status Embed Builder", true);
-                    updating = false;
-                }
             }
 
             if (config.statusLastMessageId != 0 && await statusChannel.GetMessageAsync(config.statusLastMessageId) != null)
