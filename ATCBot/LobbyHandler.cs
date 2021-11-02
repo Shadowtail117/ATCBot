@@ -70,8 +70,12 @@ namespace ATCBot
             SetupSteam();
         }
 
+        /// <summary>
+        /// Cancels the current running query timer via its token, recreates that token, and restarts the query timer based off that new token.
+        /// </summary>
         public async void ResetQueryTimer()
         {
+            Log.LogDebug("Query timer was reset.");
             queryToken.Cancel();
             queryToken = new();
             await Task.Delay(Program.config.delay);
