@@ -21,11 +21,14 @@ namespace ATCBot.Commands
             .AddChoice("jetbornelobbyid", 3)
             .AddChoice("systemmessageid", 4)
             .AddChoice("statusmessageid", 5)
-            .AddChoice("saveconfig", 6)
-            .AddChoice("botroleid", 7)
-            .AddChoice("autoquery", 8)
+            .AddChoice("botroleid", 6)
+            .AddChoice("autoquery", 7)
             .WithType(ApplicationCommandOptionType.Integer)
-        ).AddOption("value", ApplicationCommandOptionType.String, "The value to set the config item to.");
+        ).AddOption(new SlashCommandOptionBuilder()
+            .WithName("value")
+            .WithDescription("The value to set.")
+            .WithRequired(true)
+            .WithType(ApplicationCommandOptionType.String));
 
         public override string Action(SocketSlashCommand command)
         {
@@ -100,23 +103,6 @@ namespace ATCBot.Commands
                         }
 
                     case 6:
-                        successful = bool.TryParse((string)command.Data.Options.ElementAt(1).Value, out boolValue);
-                        if (successful)
-                        {
-                            if (boolValue)
-                            {
-                                Program.config.shouldSave = true;
-                                return "Will save config on shutting down!";
-                            }
-                            else
-                            {
-                                Program.config.shouldSave = false;
-                                return "Will not save config on shutting down!";
-                            }
-                        }
-                        else return "Sorry, I couldn't translate your input to a true/false boolean.";
-
-                    case 7:
                         successful = ulong.TryParse((string)command.Data.Options.ElementAt(1).Value, out value);
                         if (successful)
                         {
@@ -128,7 +114,7 @@ namespace ATCBot.Commands
                             return "Sorry, I couldn't translate your input to an integer.";
                         }
 
-                    case 8:
+                    case 7:
                         successful = bool.TryParse((string) command.Data.Options.ElementAt(1).Value, out boolValue);
                         if (successful)
                         {
