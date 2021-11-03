@@ -18,7 +18,7 @@ namespace ATCBot.Commands
             .WithName("setsystemmessageconfig")
             .WithDescription("Change what system messages should be sent. Requires permission.")
             .AddOption(new SlashCommandOptionBuilder()
-                .WithName("Type")
+                .WithName("type")
                 .WithDescription("The type of message to edit.")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer)
@@ -32,18 +32,18 @@ namespace ATCBot.Commands
                 .AddChoice("Verbose", 7)
                 .AddChoice("Debug", 8))
             .AddOption(new SlashCommandOptionBuilder()
-                .WithName("Value")
+                .WithName("value")
                 .WithDescription("What to set this type to.")
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer)
                 .AddChoice("Enabled", 1)
-                .AddChoice("Disabled", 2));
+                .AddChoice("Disabled", 0));
 
         public override string Action(SocketSlashCommand command)
         {
             if(HasPerms(command.User))
             {
-                int type = Convert.ToInt32(command.Data.Options.First());
+                int type = Convert.ToInt32(command.Data.Options.First().Value);
                 options option = type switch
                 {
                     0 => options.ConnectionStatus,
@@ -55,9 +55,9 @@ namespace ATCBot.Commands
                     6 => options.Error,
                     7 => options.Verbose,
                     8 => options.Debug,
-                    _ => throw new Exception("Impossible argument!")
+                    _ => throw new Exception("Impossible option!")
                 };
-                bool setting = Convert.ToBoolean(command.Data.Options.ElementAt(1));
+                bool setting = Convert.ToInt32(command.Data.Options.ElementAt(1).Value) == 1 ? true : false;
                 Program.config.systemMessagesConfig.Value[option] = setting;
                 return $"Successfully {(setting ? "enabled" : "disabled")} \"{option}\" option!";
             }
