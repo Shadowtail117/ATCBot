@@ -392,13 +392,6 @@ namespace ATCBot
             if (forceDontSaveConfig)
                 return;
             Console.WriteLine("------");
-            if (config.shouldSave)
-            {
-                Console.WriteLine("Saving config!");
-                config.Save(false);
-            }
-            else
-                Console.WriteLine("Not saving config!");
 
             try
             {

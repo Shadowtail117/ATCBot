@@ -2,12 +2,13 @@
 using Newtonsoft.Json.Converters;
 
 using System;
+using System.Reflection;
 using System.IO;
 
 namespace ATCBot
 {
     /// <summary>
-    /// Class to show the bot's config. Loaded when the project is started and automatically saved when it closes if <cref>shouldSave</cref> is true.
+    /// Class to show the bot's config. Loaded when the project is started and automatically saved whenever a config value is changed.
     /// </summary>
     public class Config
     {
@@ -20,100 +21,145 @@ namespace ATCBot
         /// The bot's token. Loaded externally from <see cref="saveFile"/>.
         /// </summary>
         [JsonIgnore]
-        public string token;
-
-        /// <summary>
-        /// Whether or not the config should save to disk when the program exits.
-        /// </summary>
-        [JsonIgnore]
-        public bool shouldSave = true;
+        public ConfigValue<string> token;
 
         /// <summary>
         /// The current verbosity of the logs.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
-        public Log.LogVerbosity logVerbosity;
+        public ConfigValue<Log.LogVerbosity> logVerbosity;
 
         /// <summary>
         /// Whether or not to automatically begin queries when the Discord client is ready.
         /// </summary>
-        public bool autoQuery;
+        public ConfigValue<bool> autoQuery;
 
         /// <summary>
         /// The custom status message to be saved between sessions.
         /// </summary>
-        public string customStatusMessage;
+        public ConfigValue<string> customStatusMessage;
 
         /// <summary>
         /// The last status message of the program, used to determine what to set upon restarting.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))]
-        public Program.Status status;
+        public ConfigValue<Program.Status> status;
 
         /// <summary>
         /// The ID of the role required to use restricted bot commands. If not set, defaults to Manage Server.
         /// </summary>
-        public ulong botRoleId;
+        public ConfigValue<ulong> botRoleId;
 
         /// <summary>
         /// The user ID of the owner of the bot. Required for some commands. Must be set manually in the .cfg.
         /// </summary>
-        public ulong botOwnerId;
+        public ConfigValue<ulong> botOwnerId;
 
         /// <summary>
         /// The Discord channel ID to post the VTOL lobby information in.
         /// </summary>
-        public ulong vtolLobbyChannelId;
+        public ConfigValue<ulong> vtolLobbyChannelId;
 
         /// <summary>
         /// The Discord message ID of the last VTOL lobby information posting.
         /// </summary>
-        public ulong vtolLastMessageId;
+        public ConfigValue<ulong> vtolLastMessageId;
 
         /// <summary>
         /// The Discord channel ID to post the Jetborne lobby information in.
         /// </summary>
-        public ulong jetborneLobbyChannelId;
+        public ConfigValue<ulong> jetborneLobbyChannelId;
 
         /// <summary>
         /// The Discord message ID of the last Jetborne lobby information posting.
         /// </summary>
-        public ulong jetborneLastMessageId;
+        public ConfigValue<ulong> jetborneLastMessageId;
 
         /// <summary>
         /// The Discord channel ID to post status messages to.
         /// </summary>
-        public ulong statusMessageChannelId;
+        public ConfigValue<ulong> statusMessageChannelId;
 
         /// <summary>
         /// The Discord message ID of the last status message.
         /// </summary>
-        public ulong statusLastMessageId;
+        public ConfigValue<ulong> statusLastMessageId;
 
         /// <summary>
         /// The Discord channel ID to send system messages to.
         /// </summary>
-        public ulong systemMessageChannelId;
+        public ConfigValue<ulong> systemMessageChannelId;
 
         /// <summary>
         /// Whether or not the bot should build commands.
         /// </summary>
         /// <remarks>Will automatically set itself to false after building, edit the config directly to re-enable.</remarks>
-        public bool shouldBuildCommands = true;
+        public ConfigValue<bool> shouldBuildCommands = true;
 
         /// <summary>
         /// The time in seconds to wait between server updates.
         /// </summary>
-        public int delay = 5;
+        public ConfigValue<int> delay = 5;
 
         /// <summary>
         /// The time in seconds for steam to timeout.
         /// </summary>
-        public int steamTimeout = 1;
+        public ConfigValue<int> steamTimeout = 1;
+
+        /// <summary>
+        /// Represents a singular config value of type <typeparamref name="T"/>.
+        /// </summary>
+        /// <remarks>Will automatically save <see cref="Current"/> to disk when edited.</remarks>
+        /// <typeparam name="T">The type of value to store.</typeparam>
+        public struct ConfigValue<T>
+        {
+            private T _value;
+
+            /// <summary>
+            /// The value of this config value.
+            /// </summary>
+            /// <remarks>Will automatically save <see cref="Current"/> to disk when edited.</remarks>
+            public T Value { get => _value; set
+                {
+                    Program.config?.OnValueChanged();
+                    _value = value;
+                }
+            }
+
+            /// <summary>
+            /// Returns the stored value of type <typeparamref name="T"/>.
+            /// </summary>
+            public static implicit operator T(ConfigValue<T> cv) => cv.Value;
+
+            /// <summary>
+            /// Creates a new <see cref="ConfigValue{T}"/> from <paramref name="value"/>.
+            /// </summary>
+            public static implicit operator ConfigValue<T>(T value) => new(value);
+
+            /// <summary>
+            /// Returns <see cref="Value"/> as a string.
+            /// </summary>
+            public override string ToString() => Value.ToString();
+
+            /// Creates a new <see cref="ConfigValue{T}"/> from <paramref name="value"/>.
+            public ConfigValue(T value, bool edit = true)
+            {
+                //This is done to get around needing to assign all members before using `this`
+                _value = value;
+                Value = value;
+            }
+        }
+
+        private void OnValueChanged()
+        {
+            if (loading)
+                return;
+            Save(true);
+        }
 
         private static readonly string directory = Directory.GetCurrentDirectory();
         private static readonly string saveDirectory = Path.Combine(directory, @"Config");
         private static readonly string saveFile = Path.Combine(saveDirectory, @"config.cfg");
+
+        private static bool loading;
 
         /// <summary>
         /// Saves the current config to <see cref="saveFile"/>.
@@ -137,6 +183,7 @@ namespace ATCBot
         /// <returns>Whether or not the load was successful.</returns>
         public bool Load(out Config config)
         {
+            loading = true;
             Console.WriteLine($"Loading configuration from \"{saveDirectory}\".");
             if (!Directory.Exists(saveDirectory) || !File.Exists(saveFile))
             {
@@ -159,6 +206,7 @@ namespace ATCBot
                 return false;
             }
             config.token = token;
+            loading = false;
             return true; //We cannot check if the token is actually valid here
         }
     }
