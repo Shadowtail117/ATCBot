@@ -75,6 +75,11 @@ namespace ATCBot
             {
                 Log.LogDebug("Watchdog reports an acceptable heartbeat.", "Watchdog");
                 skippedBeats = 0;
+                if(triedRestart)
+                {
+                    triedRestart = false;
+                    Log.LogInfo("Watchdog seems to have successfully defibrillated the queries!", "Watchdog", true);
+                }
             }
 
             string AddOrdinal(int n)
