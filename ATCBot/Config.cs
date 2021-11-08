@@ -4,6 +4,7 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.Reflection;
 using System.IO;
+using System.Collections.Generic;
 
 namespace ATCBot
 {
@@ -24,7 +25,7 @@ namespace ATCBot
         public ConfigValue<string> token;
 
         /// <summary>
-        /// The current verbosity of the logs.
+        /// The current verbosity of the logs. Not to be confused with <see cref="systemMessagesConfig"/>.
         /// </summary>
         public ConfigValue<Log.LogVerbosity> logVerbosity;
 
@@ -105,6 +106,77 @@ namespace ATCBot
         public ConfigValue<int> steamTimeout = 1;
 
         /// <summary>
+        /// A set of configuration options for what system messages should be sent.
+        /// </summary>
+        public ConfigValue<Dictionary<SystemMessageConfigOptions, bool>> systemMessagesConfig = defaultSystemMessageConfigOptions;
+
+        /// <summary>
+        /// Represents all available configuration options for system messages.
+        /// </summary>
+        public enum SystemMessageConfigOptions
+        {
+            /// <summary>
+            /// For logs that should intentionally never be output.
+            /// </summary>
+            Silent,
+
+            /// <summary>
+            /// All logs that don't match any other categories.
+            /// </summary>
+            Default,
+
+            /// <summary>
+            /// Sent whenever the bot/SteamKit account connect or disconnect.
+            /// </summary>
+            ConnectionStatus,
+
+            /// <summary>
+            /// Sent whenever something happend regarding queries.
+            /// </summary>
+            Queries,
+
+            /// <summary>
+            /// Sent whenever a command is received.
+            /// </summary>
+            CommandReceived,
+
+            /// <summary>
+            /// Sent if the watchdog detects a skipped heartbeat, instead of only when it flatlines.
+            /// </summary>
+            WatchdogWarnings,
+
+            /// <summary>
+            /// Sent for all informational messages.
+            /// </summary>
+            Info,
+
+            /// <summary>
+            /// Sent for all warning messages.
+            /// </summary>
+            Warning,
+
+            /// <summary>
+            /// Sent for all errors. Critical errors are always sent.
+            /// </summary>
+            Error,
+
+            /// <summary>
+            /// Sent for all verbose messages.
+            /// </summary>
+            Verbose,
+
+            /// <summary>
+            /// Sent for all debug messages.
+            /// </summary>
+            Debug,
+
+            /// <summary>
+            /// Internal value for system-critical messages that must be sent. Should never be disabled.
+            /// </summary>
+            Critical
+        }
+
+        /// <summary>
         /// Represents a singular config value of type <typeparamref name="T"/>.
         /// </summary>
         /// <remarks>Will automatically save <see cref="Current"/> to disk when edited.</remarks>
@@ -160,6 +232,24 @@ namespace ATCBot
         private static readonly string saveFile = Path.Combine(saveDirectory, @"config.cfg");
 
         private static bool loading;
+
+        private static Dictionary<SystemMessageConfigOptions, bool> defaultSystemMessageConfigOptions = new Dictionary<SystemMessageConfigOptions, bool>()
+        {
+            {SystemMessageConfigOptions.Silent, false },
+            {SystemMessageConfigOptions.Default, false },
+            {SystemMessageConfigOptions.Critical, true },
+
+            {SystemMessageConfigOptions.ConnectionStatus, true },
+            {SystemMessageConfigOptions.Queries, true },
+            {SystemMessageConfigOptions.CommandReceived, true },
+            {SystemMessageConfigOptions.WatchdogWarnings, false },
+            {SystemMessageConfigOptions.Info, true },
+            {SystemMessageConfigOptions.Warning, true },
+            {SystemMessageConfigOptions.Error, true },
+            {SystemMessageConfigOptions.Verbose, false },
+            {SystemMessageConfigOptions.Debug, false }
+
+        };
 
         /// <summary>
         /// Saves the current config to <see cref="saveFile"/>.
