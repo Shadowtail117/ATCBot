@@ -1,6 +1,6 @@
-# ATCBot v1.4.0p3
+# ATCBot
 
-[![Build](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml)
+[![Build](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Shadowtail117/ATCBot/actions/workflows/codeql-analysis.yml) ![Release](https://img.shields.io/github/v/release/Shadowtail117/ATCBot?label=Release) ![Pre-release](https://img.shields.io/github/v/release/Shadowtail117/ATCBot?include_prereleases&label=Pre-release)
 
 ATCBot is a Discord bot made for the VTOL VR / Jetborne Racing community to fetch and display lobby information to help players identify good times to get on.
 
@@ -14,18 +14,19 @@ Most variables of the bot are changeable using slash commands. See below.
 
 ATCBot currently features the following commands:
 
-| Command            | Parameters                                                                                                                                       | Description                                           | Permissions Required |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | -------------------- |
-| `version`          | None                                                                                                                                             | Gets the local version of the bot, as updated by me.  | None                 |
-| `startupdating`    | None                                                                                                                                             | Starts updating the lobby information.                | Bot Role             |
-| `stopupdating`     | None                                                                                                                                             | Stops updating the lobby information.                 | Bot Role             |
-| `getconfig`        | `config`: The config item to get.                                                                                                                | Gets the value of a config item.                      | Bot Role             |
-| `setconfig`        | `config`: The config item to set.<br/>`value`: The value to set.                                                                                 | Sets the value of a config item.                      | Bot Role             |
-| `shutdown`         | None                                                                                                                                             | Shuts down the bot. Requires a manual restart.        | Bot Role             |
-| `refresh`          | None                                                                                                                                             | Forces the bot to replace old messages with new ones. | Bot Role             |
-| `setstatusmessage` | `status`: The type of status, either online, offline, or custom.<br/>`custommessage`: If `status` was set to custom, the custom message to show. | Changes the status message of the bot, if set.        | Bot Role             |
-| `rebuildcommands`  | None                                                                                                                                             | Forces the bot to rebuild slash commands.             | Bot Owner            |
-| `setlogverbosity`  | `verbosity`: The verbosity to set.                                                                                                               | Sets the verbosity of logs/system messages.           | Bot Owner            |
+| Command                  | Parameters                                                                                                                                       | Description                                           | Permissions Required |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | -------------------- |
+| `version`                | None                                                                                                                                             | Gets the local version of the bot, as updated by me.  | None                 |
+| `startupdating`          | None                                                                                                                                             | Starts updating the lobby information.                | Bot Role             |
+| `stopupdating`           | None                                                                                                                                             | Stops updating the lobby information.                 | Bot Role             |
+| `getconfig`              | `config`: The config item to get.                                                                                                                | Gets the value of a config item.                      | Bot Role             |
+| `setconfig`              | `config`: The config item to set.<br/>`value`: The value to set.                                                                                 | Sets the value of a config item.                      | Bot Role             |
+| `shutdown`               | None                                                                                                                                             | Shuts down the bot. Requires a manual restart.        | Bot Role             |
+| `refresh`                | None                                                                                                                                             | Forces the bot to update lobby information messages.  | Bot Role             |
+| `setstatusmessage`       | `status`: The type of status, either online, offline, or custom.<br/>`custommessage`: If `status` was set to custom, the custom message to show. | Changes the status message of the bot, if set.        | Bot Role             |
+| `rebuildcommands`        | None                                                                                                                                             | Forces the bot to rebuild slash commands.             | Bot Owner            |
+| `setlogverbosity`        | `verbosity`: The verbosity to set.                                                                                                               | Sets the verbosity of logs.                           | Bot Owner            |
+| `setsystemmessageconfig` | `type`: Which type of message to change.<br/>`value`: Whether to enable or disable the specified `type`.                                         | Changes what logs are output as system messages.      | Bot Role             |
 
 ### Bot Role
 "Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
@@ -43,17 +44,16 @@ Valid arguments for `getconfig`:
 - `systemmessageid` - The channel ID set for the bot to post system messages.
 - `botroleid` - The role ID set for the bot to check permission to use restricted commands.
 - `autoquery` - Whether or not the bot will immediately begin lobby queries when it is ready.
-- 
+
 #### setconfig
 Valid arguments for `setconfig`'s first parameter:
 - `delay` - The delay **in seconds** between updates to the lobby messages, on top of network processing times.
 - `vtolchannelid` - The channel ID set for the bot to post VTOL VR lobby information.
 - `jetbornechannelid` - The channel ID set for the bot to post Jetborne Racing lobby information.
 - `systemmessageid` - The channel ID set for the bot to post system messages.
-- `saveconfig` - Whether or not the configuration will be saved upon exiting. Defaults to true every time.
 - `botroleid` - The role ID set for the bot to check permission to use restricted commands.
 - `autoquery` - Whether or not the bot will immediately begin lobby queries when it is ready.
-- 
+
 The second argument for `setconfig` is any text. It will try to parse it into an acceptable argument for the corresponding first argument -- a `ulong` (integer) for `delay`, `vtolchannelid`, `jetbornechannelid`, and `systemmessageid`, and a boolean for `saveconfig`.
 
 #### setlogverbosity
@@ -67,6 +67,21 @@ Valid arguments for `setlogverbosity`:
 Sets the content of the bot's status message. If set to `Online` or `Offline`, the message's content will be just that. Additionally, it will automatically try to change to `Offline` when shutting down and `Online` when starting up.
 
 If `Custom` is selected, a custom status message will be displayed instead and will remain until changed, even after shutting down and restarting the bot.
+
+#### setsystemmessageconfig
+
+There a number of categories that you can select to be output to the system message channel depending on your needs. They are as follows:
+- ConnectionStatus - Logs referring to the connection status of the Discord bot, or the SteamKit2 account.
+- Queries - Logs referring to things happening with the regular queries to update the lobby information messages. (Does not include the log sent every time they are updated.)
+- CommandReceived - Logs referring to whenever the bot receives a command from a user.
+- WatchdogWarnings - Logs referring to warnings that the watchdog gives when it detects the query system might have failed. If it pulls the plug, a message is always sent.
+- Info - Informational messages.
+- Warning - Warning messages.
+- Error - Error messages.
+- Verbose - Verbose messages.
+- Debug - Debug messages.
+
+This differs from `setlogverbosity` in that this controls what logs already output to the console are also shown to the system messages channel. `setlogverbosity` will completely halt its respective logs from being sent, and consequently, output as system messages.
 
 ## Hosting
 
@@ -95,6 +110,10 @@ While it may seem obvious, the account must own VTOL VR and Jetborne Racing to w
 As a console-line application, ATCBot will open a console window whenever it is running. You cannot input into this window, and it is meant for monitoring/diagnostic purposes. Closing it will close the bot. If you don't want to see it, minimize it.
 
 ATCBot will optionally input into a system messages channel any logs that are considered important. These logs are the same as the ones in the console window and you do not lose information by not setting the channel ID. However, the bot will warn you that it is not set.
+
+#### Watchdog
+
+ATCBot has a built-in watchdog. This means that it will monitor its own queries to Steamworks for lobby information and will detect if for some reason it has stopped receiving information from it. If it detects this to happen 5 times in a row, it will conclude that something unrecoverable has happened and will attempt a hard reset. If this does not work, it will terminate the application entirely along with attempting to notify the bot role if set. Otherwise, it will continue as normal.
 
 ## Credits
 

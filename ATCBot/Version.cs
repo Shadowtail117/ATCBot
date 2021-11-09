@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace ATCBot
 {
@@ -9,9 +10,9 @@ namespace ATCBot
     public static class Version
     {
         /// <summary>
-        /// The local version of the bot.
+        /// The local version of the bot obtained from version.txt.
         /// </summary>
-        public static string LocalVersion { get; } = "1.4.0p3";
+        public static string LocalVersion { get; } = File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), "version.txt"));
 
         /// <summary>
         /// The remote version on the repository.
@@ -34,7 +35,7 @@ namespace ATCBot
             }
             catch (HttpRequestException e)
             {
-                Log.LogError("Could not get remote version!", e, "Version Checker", true);
+                Log.LogError("Could not get remote version!", e, "Version Checker");
                 RemoteVersion = "ERR";
             }
             return LocalVersion == RemoteVersion;

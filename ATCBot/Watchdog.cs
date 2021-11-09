@@ -59,7 +59,8 @@ namespace ATCBot
                             }
                             else
                             {
-                                Log.LogError($"Watchdog has detected a skipped heartbeat for the 5th time in a row! Trying to revive the query timer...", source: "Watchdog", announce: true);
+                                Log.LogError($"Watchdog has detected a skipped heartbeat for the 5th time in a row! Trying to revive the query timer...",
+                                    source: "Watchdog", systemMessageOption: Config.SystemMessageConfigOptions.Critical);
                                 Program.lobbyHandler.client.Disconnect();
                                 Program.lobbyHandler = new(program);
                                 _ = Program.lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
@@ -75,6 +76,11 @@ namespace ATCBot
             {
                 Log.LogDebug("Watchdog reports an acceptable heartbeat.", "Watchdog");
                 skippedBeats = 0;
+                if(triedRestart)
+                {
+                    triedRestart = false;
+                    Log.LogInfo("Watchdog seems to have successfully defibrillated the queries!", "Watchdog");
+                }
             }
 
             string AddOrdinal(int n)

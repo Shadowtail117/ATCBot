@@ -59,11 +59,6 @@ namespace ATCBot
         public static bool shouldShutdown = false;
 
         /// <summary>
-        /// Whether or not we should refresh the messages.
-        /// </summary>
-        public static bool shouldRefresh = false;
-
-        /// <summary>
         /// Represents the current operational status of the bot.
         /// </summary>
         public enum Status
@@ -108,7 +103,7 @@ namespace ATCBot
             }
             catch (Exception e)
             {
-                Log.LogCritical($"Fatal error! Ejecting! {e.Message}", e, "Main", true);
+                Log.LogCritical($"Fatal error! Ejecting! {e.Message}", e, "Main");
                 Environment.Exit(1);
             }
         }
@@ -133,7 +128,7 @@ namespace ATCBot
 
         private static Task DiscordLog(LogMessage message)
         {
-            Log.LogCustom(message);
+            Log.LogCustom(message, Config.SystemMessageConfigOptions.ConnectionStatus);
             return Task.CompletedTask;
         }
 
@@ -180,8 +175,6 @@ namespace ATCBot
                 Log.LogWarning("Status message channel ID is not set!", "Status Embed Builder");
             else
                 await UpdateStatusMessage();
-
-            shouldRefresh = false;
         }
 
         /// <summary>
@@ -195,22 +188,8 @@ namespace ATCBot
 
             if (vtolChannel == null)
             {
-                Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
+                Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", Config.SystemMessageConfigOptions.Critical);
                 return;
-            }
-
-            if (shouldRefresh)
-            {
-                try
-                {
-                    await vtolChannel.DeleteMessageAsync(config.vtolLastMessageId);
-                    Log.LogInfo("Deleted VTOL message!");
-                }
-                catch (Discord.Net.HttpException e)
-                {
-                    Log.LogError("Couldn't delete VTOL message!", e, "VTOL Embed Builder", true);
-                    updating = false;
-                }
             }
 
             if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
@@ -227,7 +206,7 @@ namespace ATCBot
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
+                    Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder");
                     updating = false;
                 }
             }
@@ -248,20 +227,6 @@ namespace ATCBot
                 return;
             }
 
-            if (shouldRefresh)
-            {
-                try
-                {
-                    await jetborneChannel.DeleteMessageAsync(config.jetborneLastMessageId);
-                    Log.LogInfo("Deleted JBR message!");
-                }
-                catch (Discord.Net.HttpException e)
-                {
-                    Log.LogError("Couldn't delete JBR message!", e, "JBR Embed Builder", true);
-                    updating = false;
-                }
-            }
-
             if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
             {
                 await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbed.Build());
@@ -276,7 +241,7 @@ namespace ATCBot
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
+                    Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder");
                     updating = false;
                 }
             }
@@ -297,20 +262,6 @@ namespace ATCBot
                 return;
             }
 
-            if (shouldRefresh)
-            {
-                try
-                {
-                    await statusChannel.DeleteMessageAsync(config.statusLastMessageId);
-                    Log.LogInfo("Deleted JBR message!");
-                }
-                catch (Discord.Net.HttpException e)
-                {
-                    Log.LogError("Couldn't delete status message!", e, "Status Embed Builder", true);
-                    updating = false;
-                }
-            }
-
             if (config.statusLastMessageId != 0 && await statusChannel.GetMessageAsync(config.statusLastMessageId) != null)
             {
                 await statusChannel.ModifyMessageAsync(config.statusLastMessageId, m => m.Embed = statusEmbed.Build());
@@ -325,7 +276,7 @@ namespace ATCBot
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send status message!", e, "Status Embed Builder", true);
+                    Log.LogError("Couldn't send status message!", e, "Status Embed Builder");
                     updating = false;
                 }
             }
@@ -342,10 +293,10 @@ namespace ATCBot
                 {
                     if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                     {
-                        Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                        Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder");
                         continue;
                     }
-                    string content = $"{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
+                    string content = $"Host: {lobby.OwnerName}\n{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
                     vtolEmbedBuilder.AddField(lobby.LobbyName, content);
                 }
                 if(LobbyHandler.PasswordedLobbies > 0)
@@ -375,7 +326,7 @@ namespace ATCBot
                         Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
                         continue;
                     }
-                    string content = $"{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
+                    string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
                     jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
                 }
             }
@@ -400,12 +351,12 @@ namespace ATCBot
 
         async Task ClientReady()
         {
-            Log.LogInfo("Ready!", "Discord Client", true);
+            Log.LogInfo("Ready!", "Discord Client", Config.SystemMessageConfigOptions.ConnectionStatus);
             //We check the version here so that it outputs to the system channel
             if (!await Version.CheckVersion())
             {
                 Log.LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
-                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
+                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker");
             }
 
             commandHandler = new();
@@ -425,7 +376,7 @@ namespace ATCBot
 
             if(config.autoQuery)
             {
-                Log.LogInfo("Autoquery is enabled, beginning queries.", announce: true);
+                Log.LogInfo("Autoquery is enabled, beginning queries.", systemMessageOption: Config.SystemMessageConfigOptions.Queries);
                 updating = true;
             }
         }
@@ -437,17 +388,10 @@ namespace ATCBot
                 SetStatus(Status.Offline);
             }
 
-            Log.LogInfo("Shutting down! o7", announce: true);
+            Log.LogInfo("Shutting down! o7", systemMessageOption: Config.SystemMessageConfigOptions.Critical);
             if (forceDontSaveConfig)
                 return;
             Console.WriteLine("------");
-            if (config.shouldSave)
-            {
-                Console.WriteLine("Saving config!");
-                config.Save(false);
-            }
-            else
-                Console.WriteLine("Not saving config!");
 
             try
             {
@@ -463,7 +407,7 @@ namespace ATCBot
 
         private Task OnDisconnected(Exception e)
         {
-            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", true);
+            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", Config.SystemMessageConfigOptions.ConnectionStatus);
             WaitForReconnect();
 
 
@@ -477,7 +421,7 @@ namespace ATCBot
                 }
                 else
                 {
-                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
+                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", Config.SystemMessageConfigOptions.ConnectionStatus);
                     lobbyHandler.ResetQueryTimer();
                 }
             }

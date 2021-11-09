@@ -28,7 +28,7 @@ namespace ATCBot.Commands
 
                 string logMessage = $"Received slash command \"{command.Data.Name}\"{(argsAsText == "" ? "" : $" with parameters \"{argsAsText}\"")}.";
                 string logSource = $"{command.User.Username} in {command.Channel.Name}";
-                Log.LogInfo(logMessage, logSource, true);
+                Log.LogInfo(logMessage, logSource, Config.SystemMessageConfigOptions.CommandReceived);
                 Command c = Command.AllCommands.Find(c => c.Name.Equals(command.Data.Name));
                 await command.RespondAsync(c.Action(command));
             }
