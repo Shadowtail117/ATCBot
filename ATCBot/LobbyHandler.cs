@@ -53,7 +53,7 @@ namespace ATCBot
         {
             if (Program.updating)
             {
-                if(triedLoggingIn) Log.LogInfo("Updating lobbies...", "Lobby Handler", Config.SystemMessageConfigOptions.Silent);
+                if(triedLoggingIn) Log.LogInfo("Updating lobbies...", "Lobby Handler");
                 manager.RunWaitCallbacks(TimeSpan.FromSeconds(Program.config.steamTimeout));
                 await GetLobbies();
                 await program.UpdateInformation();
@@ -126,7 +126,10 @@ namespace ATCBot
             });
         }
 
-        private void OnDisconnected(SteamClient.DisconnectedCallback callback) => Log.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+        private void OnDisconnected(SteamClient.DisconnectedCallback callback)
+        {
+            Log.LogWarning("Disconnected from Steam! This usually means a problem with Steam's servers!", "Lobby Handler", true);
+        }
 
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
@@ -138,34 +141,34 @@ namespace ATCBot
             if (hasSteamGuard)
             {
                 Log.LogWarning($"Looks like Steam does not trust this machine yet. " +
-                    $"You have been emailed an auth code, please input that into steam.json and re-run the program.", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+                    $"You have been emailed an auth code, please input that into steam.json and re-run the program.", "Lobby Handler", true);
                 Environment.Exit(1);
             }
 
             if (hasF2A)
             {
-                Log.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+                Log.LogWarning("Looks like you have Steam Guard enabled, please enter the current code into steam.json and re-run the program.", "Lobby Handler", true);
                 Environment.Exit(1);
             }
 
             if (callback.Result != EResult.OK)
             {
-                Log.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+                Log.LogWarning($"Failed to log into Steam because: {callback.Result} {callback.ExtendedResult}", "Lobby Handler", true);
                 if (callback.Result.ToString().Equals("TryAnotherCM")) {
-                    Log.LogInfo("Will try to log in again, since this might not be our fault.", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+                    Log.LogInfo("Will try to log in again, since this might not be our fault.", "Lobby Handler", true);
                     SetupSteam();
                     return;
                 }
                 else Environment.Exit(1);
             }
 
-            Log.LogInfo("Logged into Steam account!", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+            Log.LogInfo("Logged into Steam account!", "Lobby Handler", true);
             loggedIn = true;
         }
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
-            Log.LogWarning("Logged out of Steam!", "Lobby Handler", Config.SystemMessageConfigOptions.ConnectionStatus);
+            Log.LogWarning("Logged out of Steam!", "Lobby Handler", true);
             loggedIn = false;
         }
 
@@ -238,7 +241,7 @@ namespace ATCBot
             }
             else
             {
-                Log.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", Config.SystemMessageConfigOptions.Queries);
+                Log.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", true);
                 vtolLobbies = new List<VTOLLobby>();
             }
 
@@ -248,7 +251,7 @@ namespace ATCBot
             }
             else
             {
-                Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", Config.SystemMessageConfigOptions.Queries);
+                Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
                 jetborneLobbies = new List<JetborneLobby>();
             }
         }
