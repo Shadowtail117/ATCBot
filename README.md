@@ -26,7 +26,6 @@ ATCBot currently features the following commands:
 | `setstatusmessage`       | `status`: The type of status, either online, offline, or custom.<br/>`custommessage`: If `status` was set to custom, the custom message to show. | Changes the status message of the bot, if set.        | Bot Role             |
 | `rebuildcommands`        | None                                                                                                                                             | Forces the bot to rebuild slash commands.             | Bot Owner            |
 | `setlogverbosity`        | `verbosity`: The verbosity to set.                                                                                                               | Sets the verbosity of logs.                           | Bot Owner            |
-| `setsystemmessageconfig` | `type`: Which type of message to change.<br/>`value`: Whether to enable or disable the specified `type`.                                         | Changes what logs are output as system messages.      | Bot Role             |
 
 ### Bot Role
 "Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
@@ -67,21 +66,6 @@ Valid arguments for `setlogverbosity`:
 Sets the content of the bot's status message. If set to `Online` or `Offline`, the message's content will be just that. Additionally, it will automatically try to change to `Offline` when shutting down and `Online` when starting up.
 
 If `Custom` is selected, a custom status message will be displayed instead and will remain until changed, even after shutting down and restarting the bot.
-
-#### setsystemmessageconfig
-
-There a number of categories that you can select to be output to the system message channel depending on your needs. They are as follows:
-- ConnectionStatus - Logs referring to the connection status of the Discord bot, or the SteamKit2 account.
-- Queries - Logs referring to things happening with the regular queries to update the lobby information messages. (Does not include the log sent every time they are updated.)
-- CommandReceived - Logs referring to whenever the bot receives a command from a user.
-- WatchdogWarnings - Logs referring to warnings that the watchdog gives when it detects the query system might have failed. If it pulls the plug, a message is always sent.
-- Info - Informational messages.
-- Warning - Warning messages.
-- Error - Error messages.
-- Verbose - Verbose messages.
-- Debug - Debug messages.
-
-This differs from `setlogverbosity` in that this controls what logs already output to the console are also shown to the system messages channel. `setlogverbosity` will completely halt its respective logs from being sent, and consequently, output as system messages.
 
 ## Hosting
 
