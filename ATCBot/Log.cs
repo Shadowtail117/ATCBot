@@ -4,12 +4,9 @@ using Discord.WebSocket;
 
 using System;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 
 using System.Threading.Tasks;
-
-using options = ATCBot.Config.SystemMessageConfigOptions;
 
 namespace ATCBot
 {
@@ -78,11 +75,11 @@ namespace ATCBot
         /// </summary>
         /// <remarks>Use when another logging method is not precise enough.</remarks>
         /// <param name="message">The message to be logged.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogCustom(LogMessage message, options systemMessageOption = options.Default)
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogCustom(LogMessage message, bool announce = false)
         {
             string output = $"{DateTime.Now,-19} [{message.Severity,8}] {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message} {message.Exception}";
-            AggregateLog.AppendLine(output + $"[With system config {systemMessageOption}");
+            AggregateLog.AppendLine(output);
 
             if (config.logVerbosity == LogVerbosity.Normal)
             {
@@ -106,18 +103,8 @@ namespace ATCBot
                 _ => throw new ArgumentException("Invalid severity!")
             };
             Console.WriteLine(output);
-
-            if (systemMessageOption == options.Default)
-                return;
-            //Critical messages always send, default messages never do
-            else if(systemMessageOption == options.Critical || Program.config.systemMessagesConfig.Value[systemMessageOption])
-            {
-                //@Role - Severity - Source: Message Exception
-                _ = SendSystemMessage($"{(config.botRoleId != 0 && message.Severity == LogSeverity.Critical ? $"<@&{config.botRoleId}> - " : "")}" +
-                    $"**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}" +
-                    $"{message.Message}{(message.Exception == null ? "" : $" {message.Exception.Message}")}");
-            }
-
+            if (announce)
+                _ = SendSystemMessage($"{(config.botRoleId != 0 && message.Severity == LogSeverity.Critical ? $"<@&{config.botRoleId}> - " : "")}**{message.Severity}** - {(message.Source.Equals(string.Empty) ? "" : $"{ message.Source}: ")}{message.Message}{(message.Exception == null ? "" : $" {message.Exception.Message}")}");
             Console.ResetColor();
         }
 
@@ -128,8 +115,8 @@ namespace ATCBot
         /// <param name="message">The message to be logged.</param>
         /// <param name="e">The exception to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogCritical(string message, Exception e = null, string source = "", options systemMessageOption = options.Critical) => LogCustom(new LogMessage(LogSeverity.Critical, source, message, e), systemMessageOption);
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogCritical(string message, Exception e = null, string source = "", bool announce = true) => LogCustom(new LogMessage(LogSeverity.Critical, source, message, e), announce);
 
         /// <summary>
         /// Logs a debug message.
@@ -137,8 +124,8 @@ namespace ATCBot
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Debug.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogDebug(string message, string source = "", options systemMessageOption = options.Debug) => LogCustom(new LogMessage(LogSeverity.Debug, source, message), systemMessageOption);
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogDebug(string message, string source = "", bool announce = false) => LogCustom(new LogMessage(LogSeverity.Debug, source, message), announce);
 
         /// <summary>
         /// Logs an error message along with an optional exception.
@@ -147,8 +134,8 @@ namespace ATCBot
         /// <param name="message">The message to be logged.</param>
         /// <param name="e">The exception to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogError(string message, Exception e = null, string source = "", options systemMessageOption = options.Error) => LogCustom(new LogMessage(LogSeverity.Error, source, message, e), systemMessageOption);
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogError(string message, Exception e = null, string source = "", bool announce = false) => LogCustom(new LogMessage(LogSeverity.Error, source, message, e), announce);
 
         /// <summary>
         /// Logs an informational message.
@@ -157,8 +144,8 @@ namespace ATCBot
         /// </remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogInfo(string message, string source = "", options systemMessageOption = options.Info) => LogCustom(new LogMessage(LogSeverity.Info, source, message), systemMessageOption);
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogInfo(string message, string source = "", bool announce = false) => LogCustom(new LogMessage(LogSeverity.Info, source, message), announce);
 
         /// <summary>
         /// Logs a verbose message.
@@ -166,8 +153,8 @@ namespace ATCBot
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Verbose.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogVerbose(string message, string source = "", options systemMessageOption = options.Verbose) => LogCustom(new LogMessage(LogSeverity.Verbose, source, message), systemMessageOption);
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogVerbose(string message, string source = "", bool announce = false) => LogCustom(new LogMessage(LogSeverity.Verbose, source, message), announce);
 
         /// <summary>
         /// Logs a warning message.
@@ -175,14 +162,14 @@ namespace ATCBot
         /// <remarks>Automatically assigns a <see cref="LogSeverity"/> of Warning.</remarks>
         /// <param name="message">The message to be logged.</param>
         /// <param name="source">The source of the message.</param>
-        /// <param name="systemMessageOption">The type of log this is, to determine whether it should be output to the system message channel.</param>
-        public static void LogWarning(string message, string source = "", options systemMessageOption = options.Warning) => LogCustom(new LogMessage(LogSeverity.Warning, source, message), systemMessageOption);
+        /// <param name="announce">Whether or not to announce the message to <see cref="Config.systemMessageChannelId"/>.</param>
+        public static void LogWarning(string message, string source = "", bool announce = false) => LogCustom(new LogMessage(LogSeverity.Warning, source, message), announce);
 
         /// <summary>
         /// Send a system message to <see cref="Config.systemMessageChannelId"/> if it is set.
         /// </summary>
         /// <param name="s">The message to send.</param>
-        internal static async Task SendSystemMessage(string s)
+        public static async Task SendSystemMessage(string s)
         {
             if (config.systemMessageChannelId == 0 && !warnedNoSystemChannel)
             {
