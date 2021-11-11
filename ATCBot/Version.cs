@@ -35,7 +35,7 @@ namespace ATCBot
             }
             catch (HttpRequestException e)
             {
-                Log.LogError("Could not get remote version!", e, "Version Checker");
+                Log.LogError("Could not get remote version!", e, "Version Checker", true);
                 RemoteVersion = "ERR";
             }
             return LocalVersion == RemoteVersion;

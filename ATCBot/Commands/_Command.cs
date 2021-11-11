@@ -23,7 +23,7 @@ namespace ATCBot.Commands
             {
                 if (!warnedBotRoleNotSet)
                 {
-                    Log.LogDebug("Bot role ID not set, defaulting to Manage Server for permission checking...");
+                    Log.LogDebug("Bot role ID not set, defaulting to Manage Server for permission checking...", announce: true);
                     warnedBotRoleNotSet = true;
                 }
 

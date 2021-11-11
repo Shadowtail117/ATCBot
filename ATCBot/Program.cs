@@ -103,7 +103,7 @@ namespace ATCBot
             }
             catch (Exception e)
             {
-                Log.LogCritical($"Fatal error! Ejecting! {e.Message}", e, "Main");
+                Log.LogCritical($"Fatal error! Ejecting! {e.Message}", e, "Main", true);
                 Environment.Exit(1);
             }
         }
@@ -128,7 +128,7 @@ namespace ATCBot
 
         private static Task DiscordLog(LogMessage message)
         {
-            Log.LogCustom(message, Config.SystemMessageConfigOptions.ConnectionStatus);
+            Log.LogCustom(message);
             return Task.CompletedTask;
         }
 
@@ -188,7 +188,7 @@ namespace ATCBot
 
             if (vtolChannel == null)
             {
-                Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", Config.SystemMessageConfigOptions.Critical);
+                Log.LogWarning("VTOL Lobby Channel ID is incorrect!", "VTOL Embed Builder", true);
                 return;
             }
 
@@ -206,7 +206,7 @@ namespace ATCBot
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder");
+                    Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
                     updating = false;
                 }
             }
@@ -241,7 +241,7 @@ namespace ATCBot
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder");
+                    Log.LogError("Couldn't send JBR message!", e, "JBR Embed Builder", true);
                     updating = false;
                 }
             }
@@ -276,7 +276,7 @@ namespace ATCBot
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send status message!", e, "Status Embed Builder");
+                    Log.LogError("Couldn't send status message!", e, "Status Embed Builder", true);
                     updating = false;
                 }
             }
@@ -293,7 +293,7 @@ namespace ATCBot
                 {
                     if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                     {
-                        Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder");
+                        Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
                         continue;
                     }
                     string content = $"Host: {lobby.OwnerName}\n{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
@@ -351,12 +351,12 @@ namespace ATCBot
 
         async Task ClientReady()
         {
-            Log.LogInfo("Ready!", "Discord Client", Config.SystemMessageConfigOptions.ConnectionStatus);
+            Log.LogInfo("Ready!", "Discord Client", true);
             //We check the version here so that it outputs to the system channel
             if (!await Version.CheckVersion())
             {
                 Log.LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
-                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker");
+                    $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
             }
 
             commandHandler = new();
@@ -376,7 +376,7 @@ namespace ATCBot
 
             if(config.autoQuery)
             {
-                Log.LogInfo("Autoquery is enabled, beginning queries.", systemMessageOption: Config.SystemMessageConfigOptions.Queries);
+                Log.LogInfo("Autoquery is enabled, beginning queries.", announce: true);
                 updating = true;
             }
         }
@@ -388,7 +388,7 @@ namespace ATCBot
                 SetStatus(Status.Offline);
             }
 
-            Log.LogInfo("Shutting down! o7", systemMessageOption: Config.SystemMessageConfigOptions.Critical);
+            Log.LogInfo("Shutting down! o7", announce: true);
             if (forceDontSaveConfig)
                 return;
             Console.WriteLine("------");
@@ -407,7 +407,7 @@ namespace ATCBot
 
         private Task OnDisconnected(Exception e)
         {
-            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", Config.SystemMessageConfigOptions.ConnectionStatus);
+            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", true);
             WaitForReconnect();
 
 
@@ -421,7 +421,7 @@ namespace ATCBot
                 }
                 else
                 {
-                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", Config.SystemMessageConfigOptions.ConnectionStatus);
+                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
                     lobbyHandler.ResetQueryTimer();
                 }
             }
