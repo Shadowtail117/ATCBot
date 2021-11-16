@@ -112,7 +112,7 @@ namespace ATCBot
         {
             Client = new DiscordSocketClient();
             Client.Log += DiscordLog;
-            Client.Ready += ClientReady;
+            Client.Ready += OnClientReady;
             Client.Disconnected += OnDisconnected;
 
             await Client.LoginAsync(TokenType.Bot, config.token);
@@ -349,7 +349,7 @@ namespace ATCBot
 
         //Event methods vvv
 
-        async Task ClientReady()
+        async Task OnClientReady()
         {
             Log.LogInfo("Ready!", "Discord Client", true);
             //We check the version here so that it outputs to the system channel
@@ -358,6 +358,8 @@ namespace ATCBot
                 Log.LogWarning($"Version mismatch! Please update ATCBot when possible. Local version: " +
                     $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
             }
+
+            await Client.SetGameAsync($"On station, version {Version.LocalVersion}", type: ActivityType.CustomStatus);
 
             commandHandler = new();
 
