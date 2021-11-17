@@ -397,20 +397,7 @@ namespace ATCBot
 
             try
             {
-                //We will update all our messages to indicate we are going offline
                 UpdateStatusMessage().GetAwaiter().GetResult();
-
-                EmbedBuilder vtolEmbedBuilder = new();
-                vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:")
-                    .AddField(new EmbedFieldBuilder().WithName("ATCBot is offline!").WithValue("Check back later!"));
-                var vtolChannel = (ISocketMessageChannel) Client.GetChannelAsync(config.vtolLobbyChannelId).GetAwaiter().GetResult();
-                _ = vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbedBuilder.Build());
-
-                EmbedBuilder jetborneEmbedBuilder = new();
-                vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:")
-                    .AddField(new EmbedFieldBuilder().WithName("ATCBot is offline!").WithValue("Check back later!"));
-                var jetborneChannel = (ISocketMessageChannel) Client.GetChannelAsync(config.jetborneLobbyChannelId).GetAwaiter().GetResult();
-                _ = jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbedBuilder.Build());
             }
             catch (Exception ex)
             {
