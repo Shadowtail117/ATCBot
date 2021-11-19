@@ -296,7 +296,12 @@ namespace ATCBot
                         Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
                         continue;
                     }
-                    string content = $"Host: {lobby.OwnerName}\n{lobby.ScenarioName}\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
+                    string content = 
+                        $"Host: {lobby.OwnerName}" +
+                        $"\n{lobby.ScenarioName}" +
+                        $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                        $"\n{lobby.LobbyGameState}{(lobby.LobbyGameState == VTOLLobby.GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
+                        $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
                     vtolEmbedBuilder.AddField(lobby.LobbyName, content);
                 }
                 if(LobbyHandler.PasswordedLobbies > 0)

@@ -21,6 +21,8 @@ namespace ATCBot.Structs
         private string gameVersion;
         private string briefingRoom;
         private string passwordHash;
+        private string ld_GameState;
+        private string mUtc;
         private int playerCount;
 
         /// <summary>
@@ -47,6 +49,19 @@ namespace ATCBot.Structs
             Morning,
             /// <summary />
             Night
+        }
+
+        /// <summary>
+        /// The current state of a lobby.
+        /// </summary>
+        public enum GameState
+        {
+            /// <summary>In briefing (pre-game).</summary>
+            Briefing,
+            /// <summary>In the mission (in-game).</summary>
+            Mission,
+            /// <summary>In debriefing (post-game).</summary>
+            Debrief
         }
 
         /// <summary>
@@ -111,6 +126,47 @@ namespace ATCBot.Structs
         public int PlayerCount { get => playerCount; private set => playerCount = value; }
 
         /// <summary>
+        /// Whether the game has started or not.
+        /// </summary>
+        public GameState LobbyGameState { get => Enum.Parse<GameState>(ld_GameState); private set => ld_GameState = value.ToString(); }
+
+        /// <summary>
+        /// The mission elapsed time.
+        /// </summary>
+        public string MET { get 
+            {
+                ElapsedMinutes(out int METHours, out int METMinutes);
+                if(METHours == -1 || METMinutes == -1)
+                {
+                    Log.LogDebug("Could not convert lobby MET, likely in (de)briefing.", LobbyName);
+                }
+                return $"{METHours}:{METMinutes:00}";
+            }
+            private set => mUtc = value;
+        }
+
+        private void ElapsedMinutes(out int hours, out int minutes)
+        {
+            if (!string.IsNullOrEmpty(mUtc))
+            {
+                System.Globalization.CultureInfo culture = new System.Globalization.CultureInfo("en-US");
+                if (DateTime.TryParse(mUtc, culture, System.Globalization.DateTimeStyles.None, out var startTime))
+                {
+                    var endTime = DateTime.UtcNow;
+                    var delta = endTime - startTime;
+                    minutes = delta.Minutes;
+                    hours = delta.Hours;
+                    return;
+                }
+            }
+
+            minutes = -1;
+            hours = -1;
+        }
+
+        internal bool METValid() => MET.Equals("-1:-01");
+
+        /// <summary>
         /// Whether or not this lobby is password protected.
         /// </summary>
         public bool PasswordProtected() => PasswordHash != 0;
@@ -167,6 +223,12 @@ namespace ATCBot.Structs
 
             if (!lobby.Metadata.TryGetValue("pwh", out passwordHash))
                 badKeys.Add("pwh");
+
+            if (!lobby.Metadata.TryGetValue("started", out ld_GameState))
+                badKeys.Add("started");
+
+            if (!lobby.Metadata.TryGetValue("met", out mUtc))
+                badKeys.Add("met");
 
             if (badKeys.Count > 0)
             {
