@@ -120,13 +120,19 @@ namespace ATCBot.Structs
         {
             if (lobby.Metadata.ContainsKey("name"))
             {
-                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
+                Log.LogVerbose("Skipping MP mod lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
             if (!lobby.Metadata.ContainsKey("scn"))
             {
                 Log.LogVerbose("Skipping incomplete lobby...", "VTOL VR Lobby Constructor");
+                this = default;
+                return;
+            }
+            if (lobby.Metadata.TryGetValue("feature", out string modded) && modded == "2")
+            {
+                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
