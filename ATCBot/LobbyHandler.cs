@@ -231,28 +231,35 @@ namespace ATCBot
 
             PasswordedLobbies = 0;
 
-            var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID);
-            var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID);
+            try
+            {
+                var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID);
+                var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID);
 
-            if (vtolLobbiesRaw != null)
-            {
-                vtolLobbies.AddRange(vtolLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => !lobby.Equals(default(VTOLLobby))));
-                PasswordedLobbies = vtolLobbies.Where(lobby => lobby.PasswordHash != 0).Count();
-            }
-            else
-            {
-                Log.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", true);
-                vtolLobbies = new List<VTOLLobby>();
-            }
+                if (vtolLobbiesRaw != null)
+                {
+                    vtolLobbies.AddRange(vtolLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => lobby.valid));
+                    PasswordedLobbies = vtolLobbies.Where(lobby => lobby.PasswordHash != 0).Count();
+                }
+                else
+                {
+                    Log.LogWarning("Raw VTOL VR lobbies was null! This could mean we were logged out of Steam for some reason!", "VTOL Lobby Getter", true);
+                    vtolLobbies = new List<VTOLLobby>();
+                }
 
-            if (jetborneLobbiesRaw != null)
-            {
-                jetborneLobbies.AddRange(jetborneLobbiesRaw.Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(default(JetborneLobby))));
+                if (jetborneLobbiesRaw != null)
+                {
+                    jetborneLobbies.AddRange(jetborneLobbiesRaw.Lobbies.Select(lobby => new JetborneLobby(lobby)).Where(lobby => !lobby.Equals(default(JetborneLobby))));
+                }
+                else
+                {
+                    Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
+                    jetborneLobbies = new List<JetborneLobby>();
+                }
             }
-            else
+            catch(Exception e)
             {
-                Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
-                jetborneLobbies = new List<JetborneLobby>();
+                Log.LogError("Could not fetch lobbies from Steamkit!", e);
             }
         }
     }

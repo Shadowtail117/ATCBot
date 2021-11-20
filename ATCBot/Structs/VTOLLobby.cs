@@ -25,6 +25,8 @@ namespace ATCBot.Structs
         private string mUtc;
         private int playerCount;
 
+        internal bool valid;
+
         /// <summary>
         /// Represents the version status of a lobby.
         /// </summary>
@@ -164,7 +166,7 @@ namespace ATCBot.Structs
             hours = -1;
         }
 
-        internal bool METValid() => MET.Equals("-1:-01");
+        internal bool METValid() => MET != "-1:-01";
 
         /// <summary>
         /// Whether or not this lobby is password protected.
@@ -224,17 +226,19 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("pwh", out passwordHash))
                 badKeys.Add("pwh");
 
-            if (!lobby.Metadata.TryGetValue("started", out ld_GameState))
-                badKeys.Add("started");
+            if (!lobby.Metadata.TryGetValue("gState", out ld_GameState))
+                badKeys.Add("gState");
 
-            if (!lobby.Metadata.TryGetValue("met", out mUtc))
-                badKeys.Add("met");
+            if (!lobby.Metadata.TryGetValue("mUtc", out mUtc))
+                Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");
 
             if (badKeys.Count > 0)
             {
                 Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
-                this = default;
+                valid = false;
             }
+            else
+                valid = true;
             Log.LogDebug($"Found VTOL Lobby | Name: {LobbyName} , Owner: {OwnerName} , Scenario: {ScenarioName} , Players: {PlayerCount}/{MaxPlayers} , PP: {PasswordProtected()}",
                 "VTOL VR Lobby Constructor");
         }

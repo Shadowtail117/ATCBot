@@ -8,6 +8,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+using GameState = ATCBot.Structs.VTOLLobby.GameState;
+
 namespace ATCBot
 {
     /// <summary>
@@ -296,11 +298,12 @@ namespace ATCBot
                         Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
                         continue;
                     }
+                    var gameState = lobby.LobbyGameState;
                     string content = 
                         $"Host: {lobby.OwnerName}" +
                         $"\n{lobby.ScenarioName}" +
                         $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
-                        $"\n{lobby.LobbyGameState}{(lobby.LobbyGameState == VTOLLobby.GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
+                        $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                         $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
                     vtolEmbedBuilder.AddField(lobby.LobbyName, content);
                 }
