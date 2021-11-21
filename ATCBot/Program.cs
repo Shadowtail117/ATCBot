@@ -367,7 +367,7 @@ namespace ATCBot
                     $"{Version.LocalVersion} - Remote version: {Version.RemoteVersion}", "Version Checker", true);
             }
 
-            await Client.SetGameAsync($"On station, version {Version.LocalVersion}", type: ActivityType.CustomStatus);
+            await Client.SetGameAsync($"the airspace, version {Version.LocalVersion}", type: ActivityType.Watching);
 
             commandHandler = new();
 
