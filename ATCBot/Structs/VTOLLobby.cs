@@ -21,7 +21,11 @@ namespace ATCBot.Structs
         private string gameVersion;
         private string briefingRoom;
         private string passwordHash;
+        private string ld_GameState;
+        private string mUtc;
         private int playerCount;
+
+        internal bool valid;
 
         /// <summary>
         /// Represents the version status of a lobby.
@@ -47,6 +51,19 @@ namespace ATCBot.Structs
             Morning,
             /// <summary />
             Night
+        }
+
+        /// <summary>
+        /// The current state of a lobby.
+        /// </summary>
+        public enum GameState
+        {
+            /// <summary>In briefing (pre-game).</summary>
+            Briefing,
+            /// <summary>In the mission (in-game).</summary>
+            Mission,
+            /// <summary>In debriefing (post-game).</summary>
+            Debrief
         }
 
         /// <summary>
@@ -111,6 +128,47 @@ namespace ATCBot.Structs
         public int PlayerCount { get => playerCount; private set => playerCount = value; }
 
         /// <summary>
+        /// Whether the game has started or not.
+        /// </summary>
+        public GameState LobbyGameState { get => Enum.Parse<GameState>(ld_GameState); private set => ld_GameState = value.ToString(); }
+
+        /// <summary>
+        /// The mission elapsed time.
+        /// </summary>
+        public string MET { get 
+            {
+                ElapsedMinutes(out int METHours, out int METMinutes);
+                if(METHours == -1 || METMinutes == -1)
+                {
+                    Log.LogDebug("Could not convert lobby MET, likely in (de)briefing.", LobbyName);
+                }
+                return $"{METHours}:{METMinutes:00}";
+            }
+            private set => mUtc = value;
+        }
+
+        private void ElapsedMinutes(out int hours, out int minutes)
+        {
+            if (!string.IsNullOrEmpty(mUtc))
+            {
+                System.Globalization.CultureInfo culture = new System.Globalization.CultureInfo("en-US");
+                if (DateTime.TryParse(mUtc, culture, System.Globalization.DateTimeStyles.None, out var startTime))
+                {
+                    var endTime = DateTime.UtcNow;
+                    var delta = endTime - startTime;
+                    minutes = delta.Minutes;
+                    hours = delta.Hours;
+                    return;
+                }
+            }
+
+            minutes = -1;
+            hours = -1;
+        }
+
+        internal bool METValid() => MET != "-1:-01";
+
+        /// <summary>
         /// Whether or not this lobby is password protected.
         /// </summary>
         public bool PasswordProtected() => PasswordHash != 0;
@@ -120,13 +178,19 @@ namespace ATCBot.Structs
         {
             if (lobby.Metadata.ContainsKey("name"))
             {
-                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
+                Log.LogVerbose("Skipping MP mod lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
             if (!lobby.Metadata.ContainsKey("scn"))
             {
                 Log.LogVerbose("Skipping incomplete lobby...", "VTOL VR Lobby Constructor");
+                this = default;
+                return;
+            }
+            if (lobby.Metadata.TryGetValue("feature", out string modded) && modded == "2")
+            {
+                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
@@ -168,11 +232,19 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("pwh", out passwordHash))
                 badKeys.Add("pwh");
 
+            if (!lobby.Metadata.TryGetValue("gState", out ld_GameState))
+                badKeys.Add("gState");
+
+            if (!lobby.Metadata.TryGetValue("mUtc", out mUtc))
+                Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");
+
             if (badKeys.Count > 0)
             {
                 Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
-                this = default;
+                valid = false;
             }
+            else
+                valid = true;
             Log.LogDebug($"Found VTOL Lobby | Name: {LobbyName} , Owner: {OwnerName} , Scenario: {ScenarioName} , Players: {PlayerCount}/{MaxPlayers} , PP: {PasswordProtected()}",
                 "VTOL VR Lobby Constructor");
         }
