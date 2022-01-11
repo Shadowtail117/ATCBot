@@ -291,6 +291,7 @@ namespace ATCBot
             vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
             if (lobbyHandler.vtolLobbies.Count - LobbyHandler.PasswordedLobbies > 0)
             {
+                bool inline = lobbyHandler.vtolLobbies.Count > 5;
                 foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()))
                 {
                     if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
@@ -305,7 +306,7 @@ namespace ATCBot
                         $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
                         $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                         $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
-                    vtolEmbedBuilder.AddField(lobby.LobbyName, content);
+                    vtolEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                 }
                 if(LobbyHandler.PasswordedLobbies > 0)
                     vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
@@ -327,6 +328,7 @@ namespace ATCBot
             jetborneEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
             if (lobbyHandler.jetborneLobbies.Count > 0)
             {
+                bool inline = lobbyHandler.jetborneLobbies.Count > 5;
                 foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
                 {
                     if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
@@ -335,7 +337,7 @@ namespace ATCBot
                         continue;
                     }
                     string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
-                    jetborneEmbedBuilder.AddField(lobby.LobbyName, content);
+                    jetborneEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                 }
             }
             else

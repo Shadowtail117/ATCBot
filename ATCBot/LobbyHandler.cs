@@ -233,8 +233,12 @@ namespace ATCBot
 
             try
             {
-                var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID);
-                var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID);
+                var filter = new List<SteamMatchmaking.Lobby.Filter>
+                {
+                    new SteamMatchmaking.Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
+                };
+                var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, filter);
+                var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID, filter);
 
                 if (vtolLobbiesRaw != null)
                 {
