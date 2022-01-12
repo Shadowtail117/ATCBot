@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Lobby = SteamKit2.SteamMatchmaking.Lobby;
+
 namespace ATCBot
 {
     internal class LobbyHandler
@@ -233,17 +235,27 @@ namespace ATCBot
 
             try
             {
-                var filter = new List<SteamMatchmaking.Lobby.Filter>
+                var publicOnly = new List<Lobby.Filter>
                 {
-                    new SteamMatchmaking.Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
+                    new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
+                    new Lobby.NumericalFilter("pwh", ELobbyComparison.Equal, 0)
                 };
-                var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, filter);
-                var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID, filter);
+                var privateOnly = new List<Lobby.Filter>
+                {
+                    new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
+                    new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0)
+                };
+
+                var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, publicOnly);
+                var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID, 
+                    new List<Lobby.Filter> { new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide) });
+                    // This is done because JBR does not have a "pwh" key
+
+                var vtolPrivateLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateOnly);
 
                 if (vtolLobbiesRaw != null)
                 {
                     vtolLobbies.AddRange(vtolLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => lobby.valid));
-                    PasswordedLobbies = vtolLobbies.Where(lobby => lobby.PasswordHash != 0).Count();
                 }
                 else
                 {
@@ -260,6 +272,8 @@ namespace ATCBot
                     Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
                     jetborneLobbies = new List<JetborneLobby>();
                 }
+
+                PasswordedLobbies = vtolPrivateLobbies.Lobbies.Count;
             }
             catch(Exception e)
             {
