@@ -289,32 +289,31 @@ namespace ATCBot
         {
             EmbedBuilder vtolEmbedBuilder = new();
             vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
-            if (lobbyHandler.vtolLobbies.Count - LobbyHandler.PasswordedLobbies > 0)
+            bool inline = lobbyHandler.vtolLobbies.Count > 5;
+
+            foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()))
             {
-                bool inline = lobbyHandler.vtolLobbies.Count > 5;
-                foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()))
+                if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                 {
-                    if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
-                    {
-                        Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
-                        continue;
-                    }
-                    var gameState = lobby.LobbyGameState;
-                    string content = 
-                        $"Host: {lobby.OwnerName}" +
-                        $"\n{lobby.ScenarioName}" +
-                        $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
-                        $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
-                        $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
-                    vtolEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                    Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                    continue;
                 }
-                if(LobbyHandler.PasswordedLobbies > 0)
-                    vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                var gameState = lobby.LobbyGameState;
+                string content = 
+                    $"Host: {lobby.OwnerName}" +
+                    $"\n{lobby.ScenarioName}" +
+                    $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                    $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
+                    $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
+                vtolEmbedBuilder.AddField(lobby.LobbyName, content, inline);
             }
+
+            if(LobbyHandler.PasswordedLobbies > 0)
+                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
             else if (LobbyHandler.PasswordedLobbies > 0)
             {
                 vtolEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
-                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} password protected {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
             }
             else
                 vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
