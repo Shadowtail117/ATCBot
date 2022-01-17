@@ -238,6 +238,14 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("mUtc", out mUtc))
                 Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");
 
+
+            if(Blacklist.blacklist.Contains(long.Parse(ownerId)))
+            {
+                Log.LogVerbose("Skipping blacklisted lobby...", "VTOL VR Lobby Constructor");
+                this = default;
+                return;
+            }
+
             if (badKeys.Count > 0)
             {
                 Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);

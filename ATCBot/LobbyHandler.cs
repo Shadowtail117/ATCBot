@@ -245,14 +245,24 @@ namespace ATCBot
                     new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
                     new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0)
                 };
-
-                var vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, publicOnly);
-                var jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID, 
-                    new List<Lobby.Filter> { new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide) });
+                SteamMatchmaking.GetLobbyListCallback vtolLobbiesRaw = null;
+                SteamMatchmaking.GetLobbyListCallback jetborneLobbiesRaw = null;
+                SteamMatchmaking.GetLobbyListCallback vtolPrivateLobbies = null;
+                try
+                {
+                    vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, publicOnly);
+                    jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID,
+                        new List<Lobby.Filter> { new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide) });
                     // This is done because JBR does not have a "pwh" key
 
-                var vtolPrivateLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateOnly);
-
+                    vtolPrivateLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateOnly);
+                }
+                catch(NullReferenceException)
+                {
+                    Log.LogError("Matchmaking object was null! Notifying watchdog...");
+                    Watchdog.lastUpdate = default;
+                    Watchdog.CheckStatus(null);
+                }
                 if (vtolLobbiesRaw != null)
                 {
                     vtolLobbies.AddRange(vtolLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => lobby.valid));
@@ -273,7 +283,7 @@ namespace ATCBot
                     jetborneLobbies = new List<JetborneLobby>();
                 }
 
-                PasswordedLobbies = vtolPrivateLobbies.Lobbies.Count;
+                PasswordedLobbies = (int)(vtolPrivateLobbies?.Lobbies.Count);
             }
             catch(Exception e)
             {
