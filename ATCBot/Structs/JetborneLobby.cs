@@ -130,6 +130,14 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("wallMode", out wallMode))
                 badKeys.Add("wallMode");
 
+
+            //if (Blacklist.blacklist.Contains(long.Parse(ownerId)))
+            //{
+            //    Log.LogVerbose("Skipping blacklisted lobby...");
+            //    this = default;
+            //    return;
+            //}
+
             if (badKeys.Count > 0)
             {
                 Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "JBR Lobby Constructor", true);

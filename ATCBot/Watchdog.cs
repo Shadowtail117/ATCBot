@@ -27,7 +27,7 @@ namespace ATCBot
 
         private static bool triedRestart;
 
-        private static void CheckStatus(object info)
+        internal static void CheckStatus(object info)
         {
             if (waitTime != Program.config.delay)
             {

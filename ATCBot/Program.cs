@@ -371,7 +371,7 @@ namespace ATCBot
             await Client.SetGameAsync($"the airspace, version {Version.LocalVersion}", type: ActivityType.Watching);
 
             commandHandler = new();
-
+            Blacklist.Load();
             commandBuilder = new(Client);
             Client.InteractionCreated += commandHandler.ClientInteractionCreated;
             await commandBuilder.BuildCommands();
