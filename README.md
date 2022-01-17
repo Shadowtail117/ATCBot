@@ -26,6 +26,9 @@ ATCBot currently features the following commands:
 | `setstatusmessage`       | `status`: The type of status, either online, offline, or custom.<br/>`custommessage`: If `status` was set to custom, the custom message to show. | Changes the status message of the bot, if set.        | Bot Role             |
 | `rebuildcommands`        | None                                                                                                                                             | Forces the bot to rebuild slash commands.             | Bot Owner            |
 | `setlogverbosity`        | `verbosity`: The verbosity to set.                                                                                                               | Sets the verbosity of logs.                           | Bot Owner            |
+| `lookup`                 | `name`: The exact name of the lobby host to lookup.                                                                                              | Looks up the SteamID of the host of a lobby.          | Bot Role             |
+| `blacklist`              | `id`: The SteamID to blacklist.                                                                                                                  | Blacklists a SteamID from appearing in the list.      | Bot Role             |
+| `loghelp`                | None                                                                                                                                             | Gives instructions to find your player.log file.      | None                 |
 
 ### Bot Role
 "Bot role" refers to a role you can set in the server that the bot will check if a user is in for restricted commands. If the role is not set (note: being set incorrectly does not count!), then the bot will instead check if the user has Manage Server/Administrator permissions.
@@ -67,15 +70,23 @@ Sets the content of the bot's status message. If set to `Online` or `Offline`, t
 
 If `Custom` is selected, a custom status message will be displayed instead and will remain until changed, even after shutting down and restarting the bot.
 
+#### blacklist
+
+Using the `lookup` and `blacklist` commands, you can filter out obscene lobby or host names. 
+
+Using the `lookup` command, you can obtain the SteamID of the host of an unwanted lobby. Paste that ID into the `blacklist` command, and their ID will be added to a blacklist effective immediately. If a person whose SteamID is blacklisted hosts a lobby, their lobby will never show up in the multiplayer lobbies list.
+
+To remove someone from the whitelist, identify their SteamID, go to `blacklist.txt` in the Config folder, and remove it. It will take effect on the next restart.
+
 ## Hosting
 
 ATCBot intrinsically requires a configuration in order to work to the host's and server's needs. Upon running the bot for the first time, a `Config` folder will be created in the directory the .exe was run in, and the program will self-terminate.
 
-In the folder is `config.cfg` and `token.txt`. `config.cfg` represents a JSON version of the bot's current configuration and should not be directly edited unless you know what you are doing. A corrupted config will make the bot do bad things! (Mostly just crash.) The only exception to this is editing the field marked `botOwnerId`, whose value should be replaced with your user ID.
+In the folder is `config.cfg` and `token.txt`. `config.cfg` represents a JSON version of the bot's current configuration and should not be directly edited unless you know what you are doing. A corrupted config will make the bot do bad things! (Mostly just crash.) **The only exception to this is editing the field marked `botOwnerId`, whose value should be replaced with your user ID.**
 
 `token.txt` is where you should put the bot's token, which you should have gotten from the Discord developer portal. This is done not only so that I don't doxx my own bot but also so other people can use their own bots to host ATCBot's code. You must set `token.txt` before running the bot otherwise it will either close after realizing it has been duped, or crash because of a malformed token.
 
-Unless you are confident enough to edit `config.cfg` yourself, you should change all public configuration variables using the in-built slash commands after running the bot. The configuration will automatically save if you have not specified not to, and you exit using the `shutdown` command. Closing it via the console window will not save the config.
+Unless you are confident enough to edit `config.cfg` yourself, you should change all public configuration variables using the in-built slash commands after running the bot. Changes made using commands will be saved automatically.
 
 ### SteamKit
 
