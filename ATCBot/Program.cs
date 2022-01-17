@@ -182,9 +182,9 @@ namespace ATCBot
         /// <summary>
         /// Updates the VTOL VR lobby message once.
         /// </summary>
-        public static async Task UpdateVtolMessage()
+        public static async Task UpdateVtolMessage(bool blank = false)
         {
-            var vtolEmbed = CreateVtolEmbed();
+            var vtolEmbed = CreateVtolEmbed(blank);
 
             var vtolChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.vtolLobbyChannelId);
 
@@ -217,9 +217,9 @@ namespace ATCBot
         /// <summary>
         /// Updates the JBR lobby message once.
         /// </summary>
-        public static async Task UpdateJetborneMessage()
+        public static async Task UpdateJetborneMessage(bool blank = false)
         {
-            var jetborneEmbed = CreateJetborneEmbed();
+            var jetborneEmbed = CreateJetborneEmbed(blank);
 
             var jetborneChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.jetborneLobbyChannelId);
 
@@ -252,9 +252,9 @@ namespace ATCBot
         /// <summary>
         /// Updates the status message once.
         /// </summary>
-        public static async Task UpdateStatusMessage()
+        public static async Task UpdateStatusMessage(bool offline = false)
         {
-            var statusEmbed = CreateStatusEmbed();
+            var statusEmbed = CreateStatusEmbed(offline);
 
             var statusChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.statusMessageChannelId);
 
@@ -285,71 +285,83 @@ namespace ATCBot
         }
 
 
-        private static EmbedBuilder CreateVtolEmbed()
+        private static EmbedBuilder CreateVtolEmbed(bool blank = false)
         {
             EmbedBuilder vtolEmbedBuilder = new();
             vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
             bool inline = lobbyHandler.vtolLobbies.Count > 5;
 
-            foreach (VTOLLobby lobby in lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()))
+            if (!blank)
             {
-                if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
+                VTOLLobby[] lobbies = lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()).ToArray();
+                if (lobbies.Length > 0)
                 {
-                    Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
-                    continue;
-                }
-                var gameState = lobby.LobbyGameState;
-                string content = 
-                    $"Host: {lobby.OwnerName}" +
-                    $"\n{lobby.ScenarioName}" +
-                    $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
-                    $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
-                    $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
-                vtolEmbedBuilder.AddField(lobby.LobbyName, content, inline);
-            }
+                    foreach (VTOLLobby lobby in lobbies)
+                    {
+                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
+                        {
+                            Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                            continue;
+                        }
+                        var gameState = lobby.LobbyGameState;
+                        string content =
+                            $"Host: {lobby.OwnerName}" +
+                            $"\n{lobby.ScenarioName}" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                            $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
+                            $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
+                        vtolEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                    }
 
-            if(LobbyHandler.PasswordedLobbies > 0)
-                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
-            else if (LobbyHandler.PasswordedLobbies > 0)
-            {
-                vtolEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
-                vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                    if (LobbyHandler.PasswordedLobbies > 0)
+                        vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                    else if (LobbyHandler.PasswordedLobbies > 0)
+                    {
+                        vtolEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
+                        vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                    }
+                }
+                else
+                    vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
             }
             else
-                vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
-
+                vtolEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
             return vtolEmbedBuilder;
         }
 
-        private static EmbedBuilder CreateJetborneEmbed()
+        private static EmbedBuilder CreateJetborneEmbed(bool blank = false)
         {
             EmbedBuilder jetborneEmbedBuilder = new();
             jetborneEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("Jetborne Racing Lobbies:");
-            if (lobbyHandler.jetborneLobbies.Count > 0)
+            if (!blank)
             {
-                bool inline = lobbyHandler.jetborneLobbies.Count > 5;
-                foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
+                if (lobbyHandler.jetborneLobbies.Count > 0)
                 {
-                    if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
+                    bool inline = lobbyHandler.jetborneLobbies.Count > 5;
+                    foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
                     {
-                        Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
-                        continue;
+                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
+                        {
+                            Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
+                            continue;
+                        }
+                        string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
+                        jetborneEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                     }
-                    string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
-                    jetborneEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                 }
+                else
+                    jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
             }
             else
-                jetborneEmbedBuilder.AddField("No lobbies!", "Check back later!");
-
+                jetborneEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
             return jetborneEmbedBuilder;
         }
 
-        private static EmbedBuilder CreateStatusEmbed() => CreateStatusEmbed(config.status == Status.Online ? "Online" : config.status == Status.Offline ? "Offline" : config.customStatusMessage);
-        private static EmbedBuilder CreateStatusEmbed(string status)
+        private static EmbedBuilder CreateStatusEmbed(bool offline = false) => CreateStatusEmbed(config.status == Status.Online ? "Online" : config.status == Status.Offline ? "Offline" : config.customStatusMessage, offline);
+        private static EmbedBuilder CreateStatusEmbed(string status, bool offline = false)
         {
             EmbedBuilder statusEmbedBuilder = new();
-            statusEmbedBuilder.WithColor(config.status == Status.Online ? Color.DarkGreen : config.status == Status.Offline ? Color.DarkRed : Color.DarkGrey);
+            statusEmbedBuilder.WithColor(offline ? Color.DarkRed : Color.DarkGreen);
             statusEmbedBuilder.WithCurrentTimestamp().WithTitle("ATCBot Status:");
             statusEmbedBuilder.WithDescription($"**{status}**");
             statusEmbedBuilder.WithFooter("Note - this may not always be up to date.");
@@ -406,7 +418,7 @@ namespace ATCBot
 
             try
             {
-                UpdateStatusMessage().GetAwaiter().GetResult();
+                UpdateMessages().GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {
@@ -414,6 +426,13 @@ namespace ATCBot
             }
 
             Log.SaveLog();
+
+            async Task UpdateMessages()
+            {
+                await UpdateVtolMessage(true);
+                await UpdateJetborneMessage(true);
+                await UpdateStatusMessage(true);
+            }
         }
 
         private Task OnDisconnected(Exception e)
