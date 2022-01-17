@@ -52,7 +52,7 @@ namespace ATCBot.Commands
                     commandList.Add(c.Builder.Build());
                 await client.BulkOverwriteGlobalApplicationCommandsAsync(commandList.ToArray());
             }
-            catch (ApplicationCommandException e)
+            catch (HttpException e)
             {
                 Log.LogCritical("Could not initialize a slash command!", e, "Slash Command Builder");
                 throw;
