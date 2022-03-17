@@ -312,8 +312,6 @@ namespace ATCBot
             EmbedBuilder ptbEmbedBuilder = new();
             ptbEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Public Testing Branch Lobbies:");
 
-            bool inline = lobbyHandler.vtolLobbies.Count > 5;
-
             if (!blank)
             {
                 //Feature lobbies
@@ -334,7 +332,7 @@ namespace ATCBot
                             $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                             $"\nv{lobby.GameVersion}";
-                        featureEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                        featureEmbedBuilder.AddField(lobby.LobbyName, content, true);
                     }
 
                     if (LobbyHandler.PasswordedFeatureLobbies > 0)
@@ -366,7 +364,7 @@ namespace ATCBot
                             $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                             $"\nv{lobby.GameVersion}";
-                        ptbEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                        ptbEmbedBuilder.AddField(lobby.LobbyName, content, true);
                     }
 
                     if (LobbyHandler.PasswordedPTBLobbies > 0)
@@ -397,7 +395,6 @@ namespace ATCBot
             {
                 if (lobbyHandler.jetborneLobbies.Count > 0)
                 {
-                    bool inline = lobbyHandler.jetborneLobbies.Count > 5;
                     foreach (JetborneLobby lobby in lobbyHandler.jetborneLobbies)
                     {
                         if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty)
@@ -406,7 +403,7 @@ namespace ATCBot
                             continue;
                         }
                         string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap <= 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
-                        jetborneEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                        jetborneEmbedBuilder.AddField(lobby.LobbyName, content, true);
                     }
                 }
                 else
