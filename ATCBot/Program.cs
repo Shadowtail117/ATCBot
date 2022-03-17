@@ -405,7 +405,7 @@ namespace ATCBot
                             Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
                             continue;
                         }
-                        string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
+                        string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap <= 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
                         jetborneEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                     }
                 }
