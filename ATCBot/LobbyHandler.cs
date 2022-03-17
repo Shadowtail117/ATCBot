@@ -251,13 +251,13 @@ namespace ATCBot
                 {
                     new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
                     new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0),
-                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "f")
+                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "0")
                 };
                 var privatePTBOnly = new List<Lobby.Filter>
                 {
                     new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
                     new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0),
-                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "p")
+                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "1")
                 };
 
                 SteamMatchmaking.GetLobbyListCallback vtolFeatureLobbiesRaw = null;
