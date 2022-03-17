@@ -381,7 +381,11 @@ namespace ATCBot
                     ptbEmbedBuilder.AddField("No lobbies!", "Check back later!");
             }
             else
+            {
+                featureEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
                 ptbEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
+            }
+
             return (featureEmbedBuilder, ptbEmbedBuilder);
         }
 
