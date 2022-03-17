@@ -381,7 +381,11 @@ namespace ATCBot
                     ptbEmbedBuilder.AddField("No lobbies!", "Check back later!");
             }
             else
+            {
+                featureEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
                 ptbEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
+            }
+
             return (featureEmbedBuilder, ptbEmbedBuilder);
         }
 
@@ -401,7 +405,7 @@ namespace ATCBot
                             Log.LogWarning("Invalid lobby state!", "JBR Embed Builder");
                             continue;
                         }
-                        string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap == 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
+                        string content = $"{lobby.Map}\n{lobby.PlayerCount} Player{(lobby.PlayerCount == 1 ? "" : "s")}\n{(lobby.CurrentLap <= 0 ? "Currently In Lobby" : $"Lap { lobby.CurrentLap}/{ lobby.RaceLaps}")}";
                         jetborneEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                     }
                 }
