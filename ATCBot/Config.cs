@@ -59,9 +59,14 @@ namespace ATCBot
         public ConfigValue<ulong> vtolLobbyChannelId;
 
         /// <summary>
-        /// The Discord message ID of the last VTOL lobby information posting.
+        /// The Discord message ID of the last VTOL feature branch lobby information posting.
         /// </summary>
-        public ConfigValue<ulong> vtolLastMessageId;
+        public ConfigValue<ulong> vtolLastFeatureMessageID;
+
+        /// <summary>
+        /// The Discord message ID of the last VTOL public testing branch lobby information posting.
+        /// </summary>
+        public ConfigValue<ulong> vtolLastPTBMessageID;
 
         /// <summary>
         /// The Discord channel ID to post the Jetborne lobby information in.
