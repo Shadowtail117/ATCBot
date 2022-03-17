@@ -184,7 +184,7 @@ namespace ATCBot
         /// </summary>
         public static async Task UpdateVtolMessage(bool blank = false)
         {
-            var vtolEmbed = CreateVtolEmbed(blank);
+            var (feature, ptb) = CreateVtolEmbeds(blank);
 
             var vtolChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.vtolLobbyChannelId);
 
@@ -194,21 +194,40 @@ namespace ATCBot
                 return;
             }
 
-            if (config.vtolLastMessageId != 0 && await vtolChannel.GetMessageAsync(config.vtolLastMessageId) != null)
+            if (config.vtolLastFeatureMessageID != 0 && await vtolChannel.GetMessageAsync(config.vtolLastFeatureMessageID) != null)
             {
-                await vtolChannel.ModifyMessageAsync(config.vtolLastMessageId, m => m.Embed = vtolEmbed.Build());
+                await vtolChannel.ModifyMessageAsync(config.vtolLastFeatureMessageID, m => m.Embed = feature.Build());
             }
             else
             {
                 try
                 {
-                    Log.LogInfo("Couldn't find existing VTOL message, making a new one...");
-                    var newMessage = await vtolChannel.SendMessageAsync(embed: vtolEmbed.Build());
-                    config.vtolLastMessageId = newMessage.Id;
+                    Log.LogInfo("Couldn't find existing VTOL feature branch message, making a new one...");
+                    var newMessage = await vtolChannel.SendMessageAsync(embed: feature.Build());
+                    config.vtolLastFeatureMessageID = newMessage.Id;
                 }
                 catch (Discord.Net.HttpException e)
                 {
-                    Log.LogError("Couldn't send VTOL message!", e, "VTOL Embed Builder", true);
+                    Log.LogError("Couldn't send VTOL feature branch message!", e, "VTOL Embed Builder", true);
+                    updating = false;
+                }
+            }
+
+            if (config.vtolLastPTBMessageID != 0 && await vtolChannel.GetMessageAsync(config.vtolLastPTBMessageID) != null)
+            {
+                await vtolChannel.ModifyMessageAsync(config.vtolLastPTBMessageID, m => m.Embed = ptb.Build());
+            }
+            else
+            {
+                try
+                {
+                    Log.LogInfo("Couldn't find existing VTOL PTB message, making a new one...");
+                    var newMessage = await vtolChannel.SendMessageAsync(embed: ptb.Build());
+                    config.vtolLastPTBMessageID = newMessage.Id;
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't send VTOL PTB message!", e, "VTOL Embed Builder", true);
                     updating = false;
                 }
             }
@@ -285,18 +304,23 @@ namespace ATCBot
         }
 
 
-        private static EmbedBuilder CreateVtolEmbed(bool blank = false)
+        private static (EmbedBuilder feature, EmbedBuilder ptb) CreateVtolEmbeds(bool blank = false)
         {
-            EmbedBuilder vtolEmbedBuilder = new();
-            vtolEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
+            EmbedBuilder featureEmbedBuilder = new();
+            featureEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
+
+            EmbedBuilder ptbEmbedBuilder = new();
+            ptbEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Public Testing Branch Lobbies:");
+
             bool inline = lobbyHandler.vtolLobbies.Count > 5;
 
             if (!blank)
             {
-                VTOLLobby[] lobbies = lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected()).ToArray();
-                if (lobbies.Length > 0)
+                //Feature lobbies
+                VTOLLobby[] feature = lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected() && l.Feature == VTOLLobby.FeatureType.f).ToArray();
+                if (feature.Length > 0)
                 {
-                    foreach (VTOLLobby lobby in lobbies)
+                    foreach (VTOLLobby lobby in feature)
                     {
                         if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
                         {
@@ -309,24 +333,56 @@ namespace ATCBot
                             $"\n{lobby.ScenarioName}" +
                             $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
-                            $"\nv{lobby.GameVersion}{(lobby.Feature == VTOLLobby.FeatureType.m ? " *(Modded)*" : "")}";
-                        vtolEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                            $"\nv{lobby.GameVersion}";
+                        featureEmbedBuilder.AddField(lobby.LobbyName, content, inline);
                     }
 
-                    if (LobbyHandler.PasswordedLobbies > 0)
-                        vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
-                    else if (LobbyHandler.PasswordedLobbies > 0)
+                    if (LobbyHandler.PasswordedFeatureLobbies > 0)
+                        featureEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedFeatureLobbies} private {(LobbyHandler.PasswordedFeatureLobbies == 1 ? "lobby" : "lobbies")}");
+                    else if (LobbyHandler.PasswordedFeatureLobbies > 0)
                     {
-                        vtolEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
-                        vtolEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedLobbies} private {(LobbyHandler.PasswordedLobbies == 1 ? "lobby" : "lobbies")}");
+                        featureEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
+                        featureEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedFeatureLobbies} private {(LobbyHandler.PasswordedFeatureLobbies == 1 ? "lobby" : "lobbies")}");
                     }
                 }
                 else
-                    vtolEmbedBuilder.AddField("No lobbies!", "Check back later!");
+                    featureEmbedBuilder.AddField("No lobbies!", "Check back later!");
+
+                //PTB lobbies
+                VTOLLobby[] ptb = lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected() && l.Feature == VTOLLobby.FeatureType.p).ToArray();
+                if (ptb.Length > 0)
+                {
+                    foreach (VTOLLobby lobby in ptb)
+                    {
+                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
+                        {
+                            Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                            continue;
+                        }
+                        var gameState = lobby.LobbyGameState;
+                        string content =
+                            $"Host: {lobby.OwnerName}" +
+                            $"\n{lobby.ScenarioName}" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                            $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
+                            $"\nv{lobby.GameVersion}";
+                        ptbEmbedBuilder.AddField(lobby.LobbyName, content, inline);
+                    }
+
+                    if (LobbyHandler.PasswordedPTBLobbies > 0)
+                        ptbEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedPTBLobbies} private {(LobbyHandler.PasswordedPTBLobbies == 1 ? "lobby" : "lobbies")}");
+                    else if (LobbyHandler.PasswordedPTBLobbies > 0)
+                    {
+                        ptbEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
+                        ptbEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedPTBLobbies} private {(LobbyHandler.PasswordedPTBLobbies == 1 ? "lobby" : "lobbies")}");
+                    }
+                }
+                else
+                    ptbEmbedBuilder.AddField("No lobbies!", "Check back later!");
             }
             else
-                vtolEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
-            return vtolEmbedBuilder;
+                ptbEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
+            return (featureEmbedBuilder, ptbEmbedBuilder);
         }
 
         private static EmbedBuilder CreateJetborneEmbed(bool blank = false)

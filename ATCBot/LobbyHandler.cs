@@ -28,9 +28,14 @@ namespace ATCBot
         public static CancellationTokenSource queryToken = new();
 
         /// <summary>
-        /// The amount of password-protected VTOL VR lobbies.
+        /// The amount of password-protected VTOL VR feature-branch lobbies.
         /// </summary>
-        public static int PasswordedLobbies { get; set; }
+        public static int PasswordedFeatureLobbies { get; set; }
+
+        /// <summary>
+        /// The amount of password-protected VTOL VR PTB-branch lobbies.
+        /// </summary>
+        public static int PasswordedPTBLobbies { get; set; }
 
         /// <summary>
         /// Whether or not the Steam client. is currently logged in.
@@ -218,6 +223,8 @@ namespace ATCBot
             Log.LogInfo("Done! You shouldn't need to re-authorize this computer again (unless you have Steam Guard enabled)!");
         }
 
+        bool triedRelogging = false;
+
         private async Task GetLobbies()
         {
             if (!triedLoggingIn) return;
@@ -231,7 +238,7 @@ namespace ATCBot
             vtolLobbies.Clear();
             jetborneLobbies.Clear();
 
-            PasswordedLobbies = 0;
+            PasswordedFeatureLobbies = 0;
 
             try
             {
@@ -240,32 +247,50 @@ namespace ATCBot
                     new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
                     new Lobby.NumericalFilter("pwh", ELobbyComparison.Equal, 0)
                 };
-                var privateOnly = new List<Lobby.Filter>
+                var privateFeatureOnly = new List<Lobby.Filter>
                 {
                     new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
-                    new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0)
+                    new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0),
+                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "f")
                 };
-                SteamMatchmaking.GetLobbyListCallback vtolLobbiesRaw = null;
+                var privatePTBOnly = new List<Lobby.Filter>
+                {
+                    new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
+                    new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0),
+                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "p")
+                };
+
+                SteamMatchmaking.GetLobbyListCallback vtolFeatureLobbiesRaw = null;
                 SteamMatchmaking.GetLobbyListCallback jetborneLobbiesRaw = null;
-                SteamMatchmaking.GetLobbyListCallback vtolPrivateLobbies = null;
+                SteamMatchmaking.GetLobbyListCallback vtolPrivateFeatureLobbies = null;
+                SteamMatchmaking.GetLobbyListCallback vtolPrivatePTBLobbies = null;
+
                 try
                 {
-                    vtolLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, publicOnly);
+                    vtolFeatureLobbiesRaw = await matchmaking.GetLobbyList(Program.vtolID, publicOnly);
                     jetborneLobbiesRaw = await matchmaking.GetLobbyList(Program.jetborneID,
                         new List<Lobby.Filter> { new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide) });
                     // This is done because JBR does not have a "pwh" key
 
-                    vtolPrivateLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateOnly);
+                    vtolPrivateFeatureLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateFeatureOnly);
+                    vtolPrivatePTBLobbies = await matchmaking.GetLobbyList(Program.vtolID, privatePTBOnly);
                 }
-                catch(NullReferenceException)
+                catch(NullReferenceException e)
                 {
-                    Log.LogError("Matchmaking object was null! Notifying watchdog...");
-                    Watchdog.lastUpdate = default;
-                    Watchdog.CheckStatus(null);
+                    if(triedRelogging)
+                    {
+                        Log.LogCritical("Matchmaking object was still null and we couldn't log back in! Aborting!");
+                        Program.shouldShutdown = true;
+                    }
+                    Log.LogError("Matchmaking object was null!", e, "Lobby Handler");
+                    Log.LogInfo("Trying to log back into Steam...", "Lobby Handler");
+                    SetupSteam();
+                    triedRelogging = true;
+                    return;
                 }
-                if (vtolLobbiesRaw != null)
+                if (vtolFeatureLobbiesRaw != null)
                 {
-                    vtolLobbies.AddRange(vtolLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => lobby.valid));
+                    vtolLobbies.AddRange(vtolFeatureLobbiesRaw.Lobbies.Select(lobby => new VTOLLobby(lobby)).Where(lobby => lobby.valid));
                 }
                 else
                 {
@@ -282,8 +307,8 @@ namespace ATCBot
                     Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
                     jetborneLobbies = new List<JetborneLobby>();
                 }
-
-                PasswordedLobbies = (int)(vtolPrivateLobbies?.Lobbies.Count);
+                PasswordedFeatureLobbies = (int)(vtolPrivateFeatureLobbies?.Lobbies.Count);
+                PasswordedPTBLobbies = (int)(vtolPrivatePTBLobbies?.Lobbies.Count);
             }
             catch(Exception e)
             {
