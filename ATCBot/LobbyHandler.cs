@@ -307,6 +307,10 @@ namespace ATCBot
                     Log.LogWarning("Raw JBR lobbies was null! This could mean we were logged out of Steam for some reason!", "JBR Lobby Getter", true);
                     jetborneLobbies = new List<JetborneLobby>();
                 }
+
+                vtolLobbies.Sort();
+                jetborneLobbies.Sort();
+
                 PasswordedFeatureLobbies = (int)(vtolPrivateFeatureLobbies?.Lobbies.Count);
                 PasswordedPTBLobbies = (int)(vtolPrivatePTBLobbies?.Lobbies.Count);
             }
