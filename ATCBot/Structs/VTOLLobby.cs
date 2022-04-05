@@ -8,7 +8,7 @@ namespace ATCBot.Structs
     /// <summary>
     /// Represents a single VTOL VR lobby.
     /// </summary>
-    public struct VTOLLobby
+    public struct VTOLLobby : IComparable<VTOLLobby>
     {
         private string lobbyName;
         private string ownerName;
@@ -168,6 +168,8 @@ namespace ATCBot.Structs
 
         internal bool METValid() => MET != "-1:-01";
 
+        internal bool LobbyFull() => PlayerCount == MaxPlayers;
+
         /// <summary>
         /// Whether or not this lobby is password protected.
         /// </summary>
@@ -255,6 +257,38 @@ namespace ATCBot.Structs
                 valid = true;
             Log.LogDebug($"Found VTOL Lobby | Name: {LobbyName} , Owner: {OwnerName} , Scenario: {ScenarioName} , Players: {PlayerCount}/{MaxPlayers} , PP: {PasswordProtected()}",
                 "VTOL VR Lobby Constructor");
+        }
+
+        /// <inheritdoc/>
+        public int CompareTo(VTOLLobby other)
+        {
+            //if our lobby is full and the other isn't, we go after them
+            if (LobbyFull() && !other.LobbyFull())
+            {
+                return 1;
+            }
+            //if their lobby is full and ours isn't, we go before them
+            if(!LobbyFull() && other.LobbyFull())
+            {
+                return -1;
+            }
+            //if we have the same players, sort alphabetically
+            else if (playerCount == other.playerCount)
+            {
+                return lobbyName.CompareTo(other.lobbyName);
+            }
+            //if we have more players, we go after them
+            else if(playerCount > other.playerCount)
+            {
+                return 1;
+            }
+            //if we have less players, we go before them
+            else if(playerCount < other.playerCount)
+            {
+                return -1;
+            }
+            //if we have made it here then something has gone wrong with the comparison process
+            throw new Exception("Could not compare lobbies!");
         }
     }
 }

@@ -329,7 +329,7 @@ namespace ATCBot
                         string content =
                             $"Host: {lobby.OwnerName}" +
                             $"\n{lobby.ScenarioName}" +
-                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players{(lobby.LobbyFull() ? " (Full)" : "")}" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                             $"\nv{lobby.GameVersion}";
                         featureEmbedBuilder.AddField(lobby.LobbyName, content, true);
@@ -361,7 +361,7 @@ namespace ATCBot
                         string content =
                             $"Host: {lobby.OwnerName}" +
                             $"\n{lobby.ScenarioName}" +
-                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players{(lobby.LobbyFull() ? " (Full)" : "")}" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                             $"\nv{lobby.GameVersion}";
                         ptbEmbedBuilder.AddField(lobby.LobbyName, content, true);
