@@ -63,7 +63,7 @@ namespace ATCBot
                 if(triedLoggingIn) Log.LogInfo("Updating lobbies...", "Lobby Handler");
                 manager.RunWaitCallbacks(TimeSpan.FromSeconds(Program.config.steamTimeout));
                 await GetLobbies();
-                await program.UpdateInformation();
+                _ = program.UpdateInformation();
                 Watchdog.lastUpdate = DateTime.Now;
             }
             else if (triedLoggingIn) Log.LogInfo("Skipping update...", "Lobby Handler");
