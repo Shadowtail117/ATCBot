@@ -38,6 +38,11 @@ namespace ATCBot
         public static int PasswordedPTBLobbies { get; set; }
 
         /// <summary>
+        /// The amount of password-protected VTOL VR modded lobbies.
+        /// </summary>
+        public static int PasswordedModdedLobbies { get; set; }
+
+        /// <summary>
         /// Whether or not the Steam client. is currently logged in.
         /// </summary>
         public static bool loggedIn;
@@ -259,11 +264,18 @@ namespace ATCBot
                     new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0),
                     new Lobby.StringFilter("feature", ELobbyComparison.Equal, "1")
                 };
+                var privateModdedOnly = new List<Lobby.Filter>
+                {
+                    new Lobby.DistanceFilter(ELobbyDistanceFilter.Worldwide),
+                    new Lobby.NumericalFilter("pwh", ELobbyComparison.NotEqual, 0),
+                    new Lobby.StringFilter("feature", ELobbyComparison.Equal, "2")
+                };
 
                 SteamMatchmaking.GetLobbyListCallback vtolFeatureLobbiesRaw = null;
                 SteamMatchmaking.GetLobbyListCallback jetborneLobbiesRaw = null;
                 SteamMatchmaking.GetLobbyListCallback vtolPrivateFeatureLobbies = null;
                 SteamMatchmaking.GetLobbyListCallback vtolPrivatePTBLobbies = null;
+                SteamMatchmaking.GetLobbyListCallback vtolPrivateModdedLobbies = null;
 
                 try
                 {
@@ -274,6 +286,7 @@ namespace ATCBot
 
                     vtolPrivateFeatureLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateFeatureOnly);
                     vtolPrivatePTBLobbies = await matchmaking.GetLobbyList(Program.vtolID, privatePTBOnly);
+                    vtolPrivateModdedLobbies = await matchmaking.GetLobbyList(Program.vtolID, privateModdedOnly);
                 }
                 catch(NullReferenceException e)
                 {
@@ -313,6 +326,7 @@ namespace ATCBot
 
                 PasswordedFeatureLobbies = (int)(vtolPrivateFeatureLobbies?.Lobbies.Count);
                 PasswordedPTBLobbies = (int)(vtolPrivatePTBLobbies?.Lobbies.Count);
+                PasswordedModdedLobbies = (int)(vtolPrivateModdedLobbies?.Lobbies.Count);
             }
             catch(Exception e)
             {

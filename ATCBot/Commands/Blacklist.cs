@@ -22,6 +22,8 @@ namespace ATCBot.Commands
                 .WithType(ApplicationCommandOptionType.String)
             );
 
+        public override bool Ephemeral { get; set; } = true;
+
         public override string Action(SocketSlashCommand command)
         {
             if(HasPerms(command.User))

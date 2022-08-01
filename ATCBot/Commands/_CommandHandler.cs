@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 
 using System;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace ATCBot.Commands
                 string logSource = $"{command.User.Username} in {command.Channel.Name}";
                 Log.LogInfo(logMessage, logSource, true);
                 Command c = Command.AllCommands.Find(c => c.Name.Equals(command.Data.Name));
-                await command.RespondAsync(c.Action(command));
+                await command.RespondAsync(c.Action(command), ephemeral: c.Ephemeral, options: Program.requestOptions);
             }
             else throw new Exception("Impossible client interaction!");
             if (Program.shouldShutdown)

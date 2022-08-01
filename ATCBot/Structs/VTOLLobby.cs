@@ -190,12 +190,6 @@ namespace ATCBot.Structs
                 this = default;
                 return;
             }
-            if (lobby.Metadata.TryGetValue("feature", out string modded) && modded == "2")
-            {
-                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
-                this = default;
-                return;
-            }
 
             List<string> badKeys = new();
 
@@ -241,7 +235,7 @@ namespace ATCBot.Structs
                 Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");
 
 
-            if(Blacklist.blacklist.Contains(long.Parse(ownerId)))
+            if(Blacklist.blacklist.Contains(long.Parse(ownerId ?? "0")))
             {
                 Log.LogVerbose("Skipping blacklisted lobby...", "VTOL VR Lobby Constructor");
                 this = default;
@@ -250,7 +244,7 @@ namespace ATCBot.Structs
 
             if (badKeys.Count > 0)
             {
-                Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
+                Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", false);
                 valid = false;
             }
             else

@@ -3,28 +3,16 @@ using Discord.WebSocket;
 
 namespace ATCBot.Commands
 {
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    class Shutdown : Command
+    internal class Shutdown : Command
     {
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public override string Name { get; set; } = "shutdown";
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
         public override SlashCommandBuilder Builder { get; set; } = new SlashCommandBuilder()
             .WithName("shutdown")
             .WithDescription("Shuts down the bot. Requires permission. WARNING: Requires manual restart!");
 
-        /// <summary>
-        /// <inheritdoc/>
-        /// </summary>
-        /// <param name="command"><inheritdoc/></param>
-        /// <returns><inheritdoc/></returns>
+        public override bool Ephemeral { get; set; } = false;
+
         public override string Action(SocketSlashCommand command)
         {
             if (HasPerms(command.User))
