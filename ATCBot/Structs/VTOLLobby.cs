@@ -23,6 +23,7 @@ namespace ATCBot.Structs
         private string passwordHash;
         private string ld_GameState;
         private string mUtc;
+        private string lSlots;
         private int playerCount;
 
         internal bool valid;
@@ -170,6 +171,21 @@ namespace ATCBot.Structs
 
         internal bool LobbyFull() => PlayerCount == MaxPlayers;
 
+        internal bool OutOfSlots()
+        {
+            if (int.TryParse(lSlots, out int lockedSlots))
+            {
+                int spacesLeft = MaxPlayers - lockedSlots - PlayerCount;
+                if (spacesLeft <= 0)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        internal bool IsUnavailable() => LobbyFull() || OutOfSlots();
+
         /// <summary>
         /// Whether or not this lobby is password protected.
         /// </summary>
@@ -231,6 +247,9 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("gState", out ld_GameState))
                 badKeys.Add("gState");
 
+            if (!lobby.Metadata.TryGetValue("lSlots", out lSlots))
+                badKeys.Add("lSlots");
+
             if (!lobby.Metadata.TryGetValue("mUtc", out mUtc))
                 Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");
 
@@ -257,12 +276,12 @@ namespace ATCBot.Structs
         public int CompareTo(VTOLLobby other)
         {
             //if our lobby is full and the other isn't, we go after them
-            if (LobbyFull() && !other.LobbyFull())
+            if (IsUnavailable() && !other.IsUnavailable())
             {
                 return 1;
             }
             //if their lobby is full and ours isn't, we go before them
-            if(!LobbyFull() && other.LobbyFull())
+            if(!IsUnavailable() && other.IsUnavailable())
             {
                 return -1;
             }
