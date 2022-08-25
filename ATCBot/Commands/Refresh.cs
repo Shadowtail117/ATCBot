@@ -12,6 +12,8 @@ namespace ATCBot.Commands
             .WithName("refresh")
             .WithDescription("Force a manual update to the lobby messages. Requires permission.");
 
+        public override bool Ephemeral { get; set; } = false;
+
         public override string Action(SocketSlashCommand command)
         {
             if (HasPerms(command.User))

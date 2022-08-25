@@ -2,10 +2,7 @@
 using Discord.WebSocket;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ATCBot.Commands
 {
@@ -24,6 +21,8 @@ namespace ATCBot.Commands
                 .AddChoice("debug", 2)
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.Integer));
+
+        public override bool Ephemeral { get; set; } = true;
 
         public override string Action(SocketSlashCommand command)
         {

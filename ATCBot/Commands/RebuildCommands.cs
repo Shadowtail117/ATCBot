@@ -11,6 +11,8 @@ namespace ATCBot.Commands
             .WithName("rebuildcommands")
             .WithDescription("Rebuild commands on next restart. Requires being the bot's owner.");
 
+        public override bool Ephemeral { get; set; } = true;
+
         public override string Action(SocketSlashCommand command)
         {
             if (Program.config.botOwnerId == 0)

@@ -23,6 +23,7 @@ namespace ATCBot.Structs
         private string passwordHash;
         private string ld_GameState;
         private string mUtc;
+        private string lSlots;
         private int playerCount;
 
         internal bool valid;
@@ -147,6 +148,12 @@ namespace ATCBot.Structs
             private set => mUtc = value;
         }
 
+        /// <summary>
+        /// The amount of locked slots, if any.
+        /// </summary>
+        public int LockedSlots { get => int.Parse(lSlots); private set => lSlots = value.ToString(); }
+
+
         private void ElapsedMinutes(out int hours, out int minutes)
         {
             if (!string.IsNullOrEmpty(mUtc))
@@ -170,6 +177,10 @@ namespace ATCBot.Structs
 
         internal bool LobbyFull() => PlayerCount == MaxPlayers;
 
+        internal bool OutOfSlots() => LockedSlots > 0 && MaxPlayers - LockedSlots <= 0;
+
+        internal bool IsUnavailable() => LobbyFull() || OutOfSlots();
+
         /// <summary>
         /// Whether or not this lobby is password protected.
         /// </summary>
@@ -187,12 +198,6 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.ContainsKey("scn"))
             {
                 Log.LogVerbose("Skipping incomplete lobby...", "VTOL VR Lobby Constructor");
-                this = default;
-                return;
-            }
-            if (lobby.Metadata.TryGetValue("feature", out string modded) && modded == "2")
-            {
-                Log.LogVerbose("Skipping modded lobby...", "VTOL VR Lobby Constructor");
                 this = default;
                 return;
             }
@@ -237,11 +242,15 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("gState", out ld_GameState))
                 badKeys.Add("gState");
 
+            //If there are no locked slots then this key will not exist, which is normal. So no need to add to bad keys.
+            if (!lobby.Metadata.TryGetValue("lSlots", out lSlots))
+                lSlots = "0";
+
             if (!lobby.Metadata.TryGetValue("mUtc", out mUtc))
                 Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");
 
 
-            if(Blacklist.blacklist.Contains(long.Parse(ownerId)))
+            if(Blacklist.blacklist.Contains(long.Parse(ownerId ?? "0")))
             {
                 Log.LogVerbose("Skipping blacklisted lobby...", "VTOL VR Lobby Constructor");
                 this = default;
@@ -250,7 +259,7 @@ namespace ATCBot.Structs
 
             if (badKeys.Count > 0)
             {
-                Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", true);
+                Log.LogWarning($"One or more keys could not be set correctly! \"{string.Join(", ", badKeys.ToArray())}\"", "VTOL VR Lobby Constructor", false);
                 valid = false;
             }
             else
@@ -263,12 +272,12 @@ namespace ATCBot.Structs
         public int CompareTo(VTOLLobby other)
         {
             //if our lobby is full and the other isn't, we go after them
-            if (LobbyFull() && !other.LobbyFull())
+            if (IsUnavailable() && !other.IsUnavailable())
             {
                 return 1;
             }
             //if their lobby is full and ours isn't, we go before them
-            if(!LobbyFull() && other.LobbyFull())
+            if(!IsUnavailable() && other.IsUnavailable())
             {
                 return -1;
             }

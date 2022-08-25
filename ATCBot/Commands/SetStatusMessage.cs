@@ -2,10 +2,7 @@
 using Discord.WebSocket;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ATCBot.Commands
 {
@@ -31,6 +28,8 @@ namespace ATCBot.Commands
                 .WithRequired(false)
             );
 
+        public override bool Ephemeral { get; set; } = true;
+
         public override string Action(SocketSlashCommand command)
         {
             string output;
@@ -50,7 +49,7 @@ namespace ATCBot.Commands
                 }
                 output = "Successfully set status to " + Program.config.status;
 
-                if(command.Data.Options.Count > 1 && command.Data.Options.ElementAt(1).Value != null)
+                if (command.Data.Options.Count > 1 && command.Data.Options.ElementAt(1).Value != null)
                 {
                     string custom = Convert.ToString(command.Data.Options.ElementAt(1).Value);
                     Program.config.customStatusMessage = custom;
