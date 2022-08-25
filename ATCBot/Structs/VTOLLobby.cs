@@ -148,6 +148,12 @@ namespace ATCBot.Structs
             private set => mUtc = value;
         }
 
+        /// <summary>
+        /// The amount of locked slots, if any.
+        /// </summary>
+        public int LockedSlots { get => int.Parse(lSlots); private set => lSlots = value.ToString(); }
+
+
         private void ElapsedMinutes(out int hours, out int minutes)
         {
             if (!string.IsNullOrEmpty(mUtc))
@@ -171,18 +177,7 @@ namespace ATCBot.Structs
 
         internal bool LobbyFull() => PlayerCount == MaxPlayers;
 
-        internal bool OutOfSlots()
-        {
-            if (int.TryParse(lSlots, out int lockedSlots))
-            {
-                int spacesLeft = MaxPlayers - lockedSlots - PlayerCount;
-                if (spacesLeft <= 0)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
+        internal bool OutOfSlots() => LockedSlots > 0 && MaxPlayers - LockedSlots <= 0;
 
         internal bool IsUnavailable() => LobbyFull() || OutOfSlots();
 
@@ -247,8 +242,9 @@ namespace ATCBot.Structs
             if (!lobby.Metadata.TryGetValue("gState", out ld_GameState))
                 badKeys.Add("gState");
 
+            //If there are no locked slots then this key will not exist, which is normal. So no need to add to bad keys.
             if (!lobby.Metadata.TryGetValue("lSlots", out lSlots))
-                badKeys.Add("lSlots");
+                lSlots = "0";
 
             if (!lobby.Metadata.TryGetValue("mUtc", out mUtc))
                 Log.LogVerbose("Could not find value 'mUtc', this lobby probably hasn't started yet.");

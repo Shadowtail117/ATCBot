@@ -63,7 +63,7 @@ namespace ATCBot
         /// <summary>
         /// Whether or not we should immediately shutdown.
         /// </summary>
-        public static bool shouldShutdown = false;
+        public volatile static bool shouldShutdown = false;
 
         /// <summary>
         /// Represents the current operational status of the bot.
@@ -128,8 +128,14 @@ namespace ATCBot
 
             _ = lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
 
-            while (!shouldShutdown)
+            while (true)
+            {
+                if(shouldShutdown)
+                {
+                    Environment.Exit(0);
+                }
                 await Task.Delay(1000);
+            }
         }
 
         private static Task DiscordLog(LogMessage message)
@@ -572,7 +578,10 @@ namespace ATCBot
 
         private Task OnDisconnected(Exception e)
         {
-            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", true);
+            //Discord frequently reqests the bot to reconnect, and it (almost) always reconnects right after. So no need to notify if this is the case.
+            bool shouldNotify = e.Message != "Server requested a reconnect";
+
+            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", shouldNotify);
             WaitForReconnect();
 
 
@@ -586,7 +595,7 @@ namespace ATCBot
                 }
                 else
                 {
-                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
+                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", shouldNotify);
                     lobbyHandler.ResetQueryTimer();
                 }
             }
