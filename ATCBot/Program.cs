@@ -37,6 +37,11 @@ namespace ATCBot
         /// </summary>
         public static DiscordSocketClient Client { get; set; }
 
+        internal static RequestOptions requestOptions = new RequestOptions()
+        {
+            RatelimitCallback = RateLimitCallback
+        };
+
         private CommandBuilder commandBuilder;
 
         private CommandHandler commandHandler;
@@ -58,7 +63,7 @@ namespace ATCBot
         /// <summary>
         /// Whether or not we should immediately shutdown.
         /// </summary>
-        public static bool shouldShutdown = false;
+        public volatile static bool shouldShutdown = false;
 
         /// <summary>
         /// Represents the current operational status of the bot.
@@ -116,7 +121,6 @@ namespace ATCBot
             Client.Log += DiscordLog;
             Client.Ready += OnClientReady;
             Client.Disconnected += OnDisconnected;
-
             await Client.LoginAsync(TokenType.Bot, config.token);
             await Client.StartAsync();
 
@@ -124,8 +128,14 @@ namespace ATCBot
 
             _ = lobbyHandler.QueryTimer(LobbyHandler.queryToken.Token);
 
-            while (!shouldShutdown)
+            while (true)
+            {
+                if(shouldShutdown)
+                {
+                    Environment.Exit(0);
+                }
                 await Task.Delay(1000);
+            }
         }
 
         private static Task DiscordLog(LogMessage message)
@@ -160,18 +170,25 @@ namespace ATCBot
             if (Client.ConnectionState == ConnectionState.Disconnected)
                 await OnDisconnected(default);
 
-
             if (config.vtolLobbyChannelId == 0)
+            {
                 Log.LogWarning("VTOL Lobby Channel ID is not set!", "VTOL Embed Builder");
+            }
             else
-                await UpdateVtolMessage();
-
+            {
+                UpdateVtolMessage().Wait();
+                //The VTOL message is explicitly waited because it does 2 edits in one (for feature and PTB).
+                //If the bot tries all three at the same time it gets rate limited.
+            }
 
             if (config.jetborneLobbyChannelId == 0)
+            {
                 Log.LogWarning("JBR Lobby Channel ID is not set!", "JBR Embed Builder");
+            }
             else
+            {
                 await UpdateJetborneMessage();
-
+            }
 
             if (config.statusMessageChannelId == 0)
                 Log.LogWarning("Status message channel ID is not set!", "Status Embed Builder");
@@ -184,9 +201,11 @@ namespace ATCBot
         /// </summary>
         public static async Task UpdateVtolMessage(bool blank = false)
         {
-            var (feature, ptb) = CreateVtolEmbeds(blank);
+            Log.LogDebug("Updating feature branch...");
 
-            var vtolChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.vtolLobbyChannelId);
+            var (feature, ptb, modded) = CreateVtolEmbeds(blank);
+
+            var vtolChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.vtolLobbyChannelId, requestOptions);
 
             if (vtolChannel == null)
             {
@@ -196,14 +215,14 @@ namespace ATCBot
 
             if (config.vtolLastFeatureMessageID != 0 && await vtolChannel.GetMessageAsync(config.vtolLastFeatureMessageID) != null)
             {
-                await vtolChannel.ModifyMessageAsync(config.vtolLastFeatureMessageID, m => m.Embed = feature.Build());
+                await vtolChannel.ModifyMessageAsync(config.vtolLastFeatureMessageID, m => m.Embed = feature.Build(), requestOptions);
             }
             else
             {
                 try
                 {
                     Log.LogInfo("Couldn't find existing VTOL feature branch message, making a new one...");
-                    var newMessage = await vtolChannel.SendMessageAsync(embed: feature.Build());
+                    var newMessage = await vtolChannel.SendMessageAsync(embed: feature.Build(), options: requestOptions);
                     config.vtolLastFeatureMessageID = newMessage.Id;
                 }
                 catch (Discord.Net.HttpException e)
@@ -213,16 +232,18 @@ namespace ATCBot
                 }
             }
 
+            Log.LogDebug("Updating PTB...");
+
             if (config.vtolLastPTBMessageID != 0 && await vtolChannel.GetMessageAsync(config.vtolLastPTBMessageID) != null)
             {
-                await vtolChannel.ModifyMessageAsync(config.vtolLastPTBMessageID, m => m.Embed = ptb.Build());
+                await vtolChannel.ModifyMessageAsync(config.vtolLastPTBMessageID, m => m.Embed = ptb.Build(), requestOptions);
             }
             else
             {
                 try
                 {
                     Log.LogInfo("Couldn't find existing VTOL PTB message, making a new one...");
-                    var newMessage = await vtolChannel.SendMessageAsync(embed: ptb.Build());
+                    var newMessage = await vtolChannel.SendMessageAsync(embed: ptb.Build(), options: requestOptions);
                     config.vtolLastPTBMessageID = newMessage.Id;
                 }
                 catch (Discord.Net.HttpException e)
@@ -231,6 +252,29 @@ namespace ATCBot
                     updating = false;
                 }
             }
+
+            /*
+            Log.LogDebug("Updating modded...");
+            if (config.vtolLastModdedMessageID != 0 && await vtolChannel.GetMessageAsync(config.vtolLastModdedMessageID) != null)
+            {
+                Delay(500);
+                await vtolChannel.ModifyMessageAsync(config.vtolLastModdedMessageID, m => m.Embed = modded.Build());
+            }
+            else
+            {
+                try
+                {
+                    Log.LogInfo("Couldn't find existing VTOL modded message, making a new one...");
+                    var newMessage = await vtolChannel.SendMessageAsync(embed: ptb.Build());
+                    config.vtolLastModdedMessageID = newMessage.Id;
+                }
+                catch (Discord.Net.HttpException e)
+                {
+                    Log.LogError("Couldn't send VTOL modded message!", e, "VTOL Embed Builder", true);
+                    updating = false;
+                }
+            }
+            */
         }
 
         /// <summary>
@@ -238,9 +282,11 @@ namespace ATCBot
         /// </summary>
         public static async Task UpdateJetborneMessage(bool blank = false)
         {
+            Log.LogDebug("Updating Jetborne...");
+
             var jetborneEmbed = CreateJetborneEmbed(blank);
 
-            var jetborneChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.jetborneLobbyChannelId);
+            var jetborneChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.jetborneLobbyChannelId, requestOptions);
 
             if (jetborneChannel == null)
             {
@@ -250,14 +296,14 @@ namespace ATCBot
 
             if (config.jetborneLastMessageId != 0 && await jetborneChannel.GetMessageAsync(config.jetborneLastMessageId) != null)
             {
-                await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbed.Build());
+                await jetborneChannel.ModifyMessageAsync(config.jetborneLastMessageId, m => m.Embed = jetborneEmbed.Build(), requestOptions);
             }
             else
             {
                 try
                 {
                     Log.LogInfo("Couldn't find existing JBR message, making a new one...");
-                    var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbed.Build());
+                    var newMessage = await jetborneChannel.SendMessageAsync(embed: jetborneEmbed.Build(), options: requestOptions);
                     config.jetborneLastMessageId = newMessage.Id;
                 }
                 catch (Discord.Net.HttpException e)
@@ -273,9 +319,11 @@ namespace ATCBot
         /// </summary>
         public static async Task UpdateStatusMessage(bool offline = false)
         {
+            Log.LogDebug("Updating status message...");
+
             var statusEmbed = CreateStatusEmbed(offline);
 
-            var statusChannel = (ISocketMessageChannel) await Client.GetChannelAsync(config.statusMessageChannelId);
+            var statusChannel = (ISocketMessageChannel)await Client.GetChannelAsync(config.statusMessageChannelId, requestOptions);
 
             if (statusChannel == null)
             {
@@ -285,14 +333,14 @@ namespace ATCBot
 
             if (config.statusLastMessageId != 0 && await statusChannel.GetMessageAsync(config.statusLastMessageId) != null)
             {
-                await statusChannel.ModifyMessageAsync(config.statusLastMessageId, m => m.Embed = statusEmbed.Build());
+                await statusChannel.ModifyMessageAsync(config.statusLastMessageId, m => m.Embed = statusEmbed.Build(), requestOptions);
             }
             else
             {
                 try
                 {
                     Log.LogInfo("Couldn't find existing status message, making a new one...");
-                    var newMessage = await statusChannel.SendMessageAsync(embed: statusEmbed.Build());
+                    var newMessage = await statusChannel.SendMessageAsync(embed: statusEmbed.Build(), options: requestOptions);
                     config.statusLastMessageId = newMessage.Id;
                 }
                 catch (Discord.Net.HttpException e)
@@ -304,13 +352,16 @@ namespace ATCBot
         }
 
 
-        private static (EmbedBuilder feature, EmbedBuilder ptb) CreateVtolEmbeds(bool blank = false)
+        private static (EmbedBuilder feature, EmbedBuilder ptb, EmbedBuilder modded) CreateVtolEmbeds(bool blank = false)
         {
             EmbedBuilder featureEmbedBuilder = new();
             featureEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Lobbies:");
 
             EmbedBuilder ptbEmbedBuilder = new();
             ptbEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Public Testing Branch Lobbies:");
+
+            EmbedBuilder moddedEmbedBuilder = new();
+            moddedEmbedBuilder.WithColor(Color.DarkGrey).WithCurrentTimestamp().WithTitle("VTOL VR Modded Lobbies:");
 
             if (!blank)
             {
@@ -329,7 +380,7 @@ namespace ATCBot
                         string content =
                             $"Host: {lobby.OwnerName}" +
                             $"\n{lobby.ScenarioName}" +
-                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players{(lobby.LobbyFull() ? " (Full)" : "")}" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                             $"\nv{lobby.GameVersion}";
                         featureEmbedBuilder.AddField(lobby.LobbyName, content, true);
@@ -361,7 +412,7 @@ namespace ATCBot
                         string content =
                             $"Host: {lobby.OwnerName}" +
                             $"\n{lobby.ScenarioName}" +
-                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players{(lobby.LobbyFull() ? " (Full)" : "")}" +
                             $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
                             $"\nv{lobby.GameVersion}";
                         ptbEmbedBuilder.AddField(lobby.LobbyName, content, true);
@@ -377,14 +428,47 @@ namespace ATCBot
                 }
                 else
                     ptbEmbedBuilder.AddField("No lobbies!", "Check back later!");
+
+                //Modded lobbies
+                VTOLLobby[] modded = lobbyHandler.vtolLobbies.Where(l => !l.PasswordProtected() && l.Feature == VTOLLobby.FeatureType.m).ToArray();
+                if (modded.Length > 0)
+                {
+                    foreach (VTOLLobby lobby in modded)
+                    {
+                        if (lobby.OwnerName == string.Empty || lobby.LobbyName == string.Empty || lobby.ScenarioName == string.Empty)
+                        {
+                            Log.LogWarning("Invalid lobby state!", "VTOL Embed Builder", true);
+                            continue;
+                        }
+                        var gameState = lobby.LobbyGameState;
+                        string content =
+                            $"Host: {lobby.OwnerName}" +
+                            $"\n{lobby.ScenarioName}" +
+                            $"\n{lobby.PlayerCount}/{lobby.MaxPlayers} Players{(lobby.LobbyFull() ? " (Full)" : "")}" +
+                            $"\n{gameState}{(gameState == GameState.Mission && lobby.METValid() ? $" ({lobby.MET})" : "")}" +
+                            $"\nv{lobby.GameVersion}";
+                        moddedEmbedBuilder.AddField(lobby.LobbyName, content, true);
+                    }
+
+                    if (LobbyHandler.PasswordedModdedLobbies > 0)
+                        moddedEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedModdedLobbies} private {(LobbyHandler.PasswordedModdedLobbies == 1 ? "lobby" : "lobbies")}");
+                    else if (LobbyHandler.PasswordedFeatureLobbies > 0)
+                    {
+                        moddedEmbedBuilder.AddField($"No public lobbies!", "Check back later!");
+                        moddedEmbedBuilder.WithFooter($"+{LobbyHandler.PasswordedModdedLobbies} private {(LobbyHandler.PasswordedModdedLobbies == 1 ? "lobby" : "lobbies")}");
+                    }
+                }
+                else
+                    moddedEmbedBuilder.AddField("No lobbies!", "Check back later!");
             }
             else
             {
                 featureEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
                 ptbEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
+                moddedEmbedBuilder.AddField("ATCBot is currently offline!", "Check back later!");
             }
 
-            return (featureEmbedBuilder, ptbEmbedBuilder);
+            return (featureEmbedBuilder, ptbEmbedBuilder, moddedEmbedBuilder);
         }
 
         private static EmbedBuilder CreateJetborneEmbed(bool blank = false)
@@ -454,7 +538,7 @@ namespace ATCBot
 
             Watchdog.Start();
 
-            if(config.autoQuery)
+            if (config.autoQuery)
             {
                 Log.LogInfo("Autoquery is enabled, beginning queries.", announce: true);
                 updating = true;
@@ -494,7 +578,10 @@ namespace ATCBot
 
         private Task OnDisconnected(Exception e)
         {
-            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", true);
+            //Discord frequently reqests the bot to reconnect, and it (almost) always reconnects right after. So no need to notify if this is the case.
+            bool shouldNotify = e.Message != "Server requested a reconnect";
+
+            Log.LogInfo("Discord has disconnected! Reason: " + e.Message, "Discord Client", shouldNotify);
             WaitForReconnect();
 
 
@@ -508,10 +595,16 @@ namespace ATCBot
                 }
                 else
                 {
-                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", true);
+                    Log.LogInfo("Reconnected. As a precaution, we will restart the lobby queries.", "Discord Client", shouldNotify);
                     lobbyHandler.ResetQueryTimer();
                 }
             }
+            return Task.CompletedTask;
+        }
+
+        internal static Task RateLimitCallback(IRateLimitInfo info)
+        {
+            Log.LogDebug($"Rate info limit received. Limit: {info.Limit} | Remaining: {info.Remaining} | Resets after: {info.ResetAfter} | Bucket: {info.Bucket}");
             return Task.CompletedTask;
         }
     }

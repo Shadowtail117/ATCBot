@@ -60,5 +60,10 @@ namespace ATCBot.Commands
         /// <param name="command">The context of the command when invoked.</param>
         /// <returns>A string to output back to the user who invoked the command.</returns>
         public abstract string Action(SocketSlashCommand command);
+
+        /// <summary>
+        /// Whether or not the command will return an ephemeral message.
+        /// </summary>
+        public abstract bool Ephemeral { get; set; }
     }
 }

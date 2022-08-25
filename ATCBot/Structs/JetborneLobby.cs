@@ -1,5 +1,6 @@
 using SteamKit2;
 
+using System;
 using System.Collections.Generic;
 
 namespace ATCBot.Structs
@@ -7,7 +8,7 @@ namespace ATCBot.Structs
     /// <summary>
     /// Represents a single Jetborne Racing lobby.
     /// </summary>
-    public struct JetborneLobby
+    public struct JetborneLobby : IComparable<JetborneLobby>
     {
         private string lobbyName;
         private string ownerName;
@@ -21,6 +22,7 @@ namespace ATCBot.Structs
         private string playerCollisions;
         private string wallMode;
         private int playerCount;
+        private int maxPlayers;
 
         /// <summary>
         /// The name of the lobby.
@@ -82,6 +84,11 @@ namespace ATCBot.Structs
         /// </summary>
         public int PlayerCount { get => playerCount; private set => playerCount = value; }
 
+        /// <summary>
+        /// The max amount of players in the lobby.
+        /// </summary>
+        public int MaxPlayers { get => maxPlayers; private set => maxPlayers = value; }
+
 
         /// <summary>Create a lobby from a SteamKit2 lobby.</summary>>
         public JetborneLobby(SteamMatchmaking.Lobby lobby)
@@ -96,6 +103,7 @@ namespace ATCBot.Structs
             List<string> badKeys = new();
 
             playerCount = lobby.NumMembers;
+            maxPlayers = lobby.MaxMembers;
 
             if (!lobby.Metadata.TryGetValue("name", out lobbyName))
                 badKeys.Add("name");
@@ -144,6 +152,33 @@ namespace ATCBot.Structs
                 this = default;
             }
             Log.LogDebug($"Found JBR Lobby | Name: {LobbyName} , Owner: {OwnerName} , Map: {Map} , Players: {PlayerCount}", "JBR Lobby Constructor");
+        }
+
+        /// <inheritdoc/>
+        public int CompareTo(JetborneLobby other)
+        {
+            //if our lobby is full and the other isn't, we go after them
+            if (playerCount == MaxPlayers && other.playerCount != other.MaxPlayers)
+            {
+                return 1;
+            }
+            //if we have the same players, sort alphabetically
+            else if (playerCount == other.playerCount)
+            {
+                return lobbyName.CompareTo(other.lobbyName);
+            }
+            //if we have more players, we go after them
+            else if (playerCount > other.playerCount)
+            {
+                return 1;
+            }
+            //if we have less players, we go before them
+            else if (playerCount < other.playerCount)
+            {
+                return -1;
+            }
+            //if we have made it here then something has gone wrong with the comparison process
+            throw new Exception("Could not compare lobbies!");
         }
     }
 }
