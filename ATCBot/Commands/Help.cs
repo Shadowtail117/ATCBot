@@ -23,6 +23,8 @@ namespace ATCBot.Commands
                 .AddChoice("audio", 2)
                 .AddChoice("oculus", 3)
                 .AddChoice("verify", 4)
+                .AddChoice("disablemodloader", 5)
+                .AddChoice("sptomp", 6)
                 .WithType(ApplicationCommandOptionType.Integer)
             );
 
@@ -60,6 +62,17 @@ namespace ATCBot.Commands
                 "\n2. Click on Properties in the dropdown menu." +
                 "\n3. In the menu that pops up, click \"Local Files\" in the sidebar on the left." +
                 "\n4. Click \"Verify integrity of game files...\" at the bottom of the menu.",
+
+                5 =>
+                "To disable the VTOL VR Mod Loader, follow these steps:" +
+                "\n1. In the Mod Loader's settings, under the Diagnostics section, click on the button next to \"Disable Mod Loader\"." +
+                "\n1. Go into Steam and verify your game files. Type `/help verify` for help with this step.",
+
+                6 =>
+                "To convert an existing singleplayer mission to multiplayer:" +
+                "\n1. Create a new singleplayer campaign." +
+                "\n2. Import your mission into that campaign via the campaign editor." +
+                "\n3. Convert the campaign to multiplayer via the campaign editor.",
 
                 _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"")
             };
