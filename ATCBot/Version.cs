@@ -12,7 +12,7 @@ namespace ATCBot
         /// <summary>
         /// The local version of the bot obtained from version.txt.
         /// </summary>
-        public static string LocalVersion { get; } = "1.4.0";
+        public static string LocalVersion { get; } = "1.4.1";
 
         /// <summary>
         /// The remote version on the repository.
