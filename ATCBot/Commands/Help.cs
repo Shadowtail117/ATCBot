@@ -25,6 +25,7 @@ namespace ATCBot.Commands
                 .AddChoice("verify", 4)
                 .AddChoice("disablemodloader", 5)
                 .AddChoice("sptomp", 6)
+                .AddChoice("twoseat", 7)
                 .WithType(ApplicationCommandOptionType.Integer)
             );
 
@@ -73,6 +74,12 @@ namespace ATCBot.Commands
                 "\n1. Create a new singleplayer campaign." +
                 "\n2. Import your mission into that campaign via the campaign editor." +
                 "\n3. Convert the campaign to multiplayer via the campaign editor.",
+                
+                7 =>
+                "According to BahamutoD:" +
+                "\n> The only thing that a 2 [seater] jet without other new features would add is the ability to train someone." +
+                "\n> If it was just a 2 seater 26b then no." +
+                "\nPlease read <#756543573608104098> in regards to new vehicles.",  // Channel ID for #faq
 
                 _ => throw new ArgumentException($"Invalid argument! \"{command.Data.Options.First().Value}\"")
             };
